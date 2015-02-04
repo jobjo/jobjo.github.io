@@ -59,7 +59,7 @@ And some FSharp:
 {% highlight fsharp %}
 type T<'U> = | Bar of int | V of 'U
 
-(* Hello *)
+// One line comment
 let rec foo xs = [1,2] :: foo xs
 
 {% endhighlight %}
