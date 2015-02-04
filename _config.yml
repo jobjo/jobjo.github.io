@@ -34,7 +34,7 @@ paginate_path: "blog/page:num"
 
 # BUILD SETTINGS
 markdown: kramdown
-highlighter: rouge
+highlighter: pygments
 
 sass:
   sass_dir: _sass
