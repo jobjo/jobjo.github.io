@@ -9,35 +9,17 @@ theme:
   avatar: avatar.png
   gravatar: # email md5 hash
   description: "A website with blog posts, and pages." # used by search engines
-  
 
-  
   # Icons
   rss: false
-  email_address: joel.bjornson@gmail.com # full email address, e.g. "sam@example.com"
-  behance:
-  bitbucket: 
-  dribbble: 
-  facebook: 
-  flickr: 
+  email_address: joel.bjornson@gmail.com
   github: "jobjo/jobjo.github.io"
-  google_plus: 
-  instagram: 
-  linkedin:  # full URL
-  pinterest: 
-  reddit: 
-  soundcloud: 
-  stack_exchange:  # full URL
-  steam: 
-  tumblr: 
   twitter: "joelbjornson"
-  wordpress: 
-  youtube: 
-  
+
   # Scripts
   google_analytics: # tracking id, e.g. "UA-000000-01"
   disqus_shortname:
-  
+
   # Localization strings
   str_follow_on: "Follow on"
   str_rss_follow: "Follow RSS feed"
@@ -45,9 +27,6 @@ theme:
   str_next: "Next"
   str_prev: "Prev"
   str_continue_reading: "Continue reading"
-  
-  # Colors, typography and padding
-  # Open the "_sass > base" folder, and open "_variables.scss"
 
 # PAGINATION
 paginate: 5
@@ -60,8 +39,6 @@ highlighter: rouge
 sass:
   sass_dir: _sass
   style: :compressed
-
-pygments: false
 
 # Build settings
 markdown: kramdown
