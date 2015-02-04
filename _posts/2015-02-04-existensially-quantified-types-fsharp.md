@@ -2,12 +2,12 @@
 layout: post
 title: Church Encoding and Existentially Quantified types in F#
 ---
-What would happen is the F# team decided to drop the support for algebraic data types (discriminated unions)? Certainly not a pleasant thought but perhaps just not as horrifying as you might expect.
+What would happen is the F# team decided to drop the support for algebraic data types (discriminated unions)? Certainly not an encouraging thought but perhaps just not as horrifying as you might expect.
 
-Consider for instance the standard option type:
+Consider how the familar option type is defined in F#
 
 {% highlight fsharp %}
-type Option<'T> =
+type option<'T> =
   | Some of 'T
   | None
 {% endhighlight %}
@@ -15,13 +15,13 @@ type Option<'T> =
 and the ability to pattern match over `Option` values:
 
 {% highlight fsharp %}
-let myFunction (p: Option<'T>) =
-  match p with
+let foo =
+  match someValue with
   | Some x  -> ...
   | None    -> ...
 {% endhighlight %}
 
-How were we to define an isomorphic data type without using a sum-type?
+Is it possible to define an isomorphic data type without using an algebraic data type?
 
 One solution is given by [church-encodings](http://en.wikipedia.org/wiki/Church_encoding); A data structure can be encoded as a function accepting one continuation per constructor. For instance consider a function 
 
@@ -29,7 +29,7 @@ One solution is given by [church-encodings](http://en.wikipedia.org/wiki/Church_
 val someOptionValue<'T> : (unit -> 'T) -> (int -> 'T) -> 'T
 {% endhighlight %}
 
-Thinking of implementation of this function it's clear that it can only do one of two things; Either invoke the first argument with a unit value or invoking the second function with a particular integer. It is straight-forward to convert it back to a regular `option<int>`:
+When thinking of the possible implementations of this function it's clear that it can only do one of two things; Either invoke the first argument with a unit value or apply the second argument on some integer. It is straight-forward to convert the value to regular `option<int>`.
 
 {% highlight fsharp %}
 myOption (fun _ -> None) Some
@@ -38,16 +38,17 @@ myOption (fun _ -> None) Some
 We can further define functions `fromOption` and  `toOption` and show that they are each others inverse:
 
 {% highlight fsharp %}
-let fromOption<'T,'U> : option<'T> -> (unit -> 'U) -> ('T -> 'U) -> 'U = function
+// Church-encode an option value.
+let fromOption = function
     | Some x    -> fun _ s -> s x
     | None      -> fun n _ -> n ()
 
+// Decode a church-encoded option value.
 let toOption op = op (fun _ -> None) Some
-let id<'T> = fromOption<'T,option<'T>> >> toOption
 
 {% endhighlight %}
 
-We can also mimic the constructors of the original `Option` type:
+We can also mimic the constructors of the original `option` type:
 
 {% highlight fsharp %}
 // Constructs an empty value.
@@ -76,7 +77,7 @@ In order to package it up as a library it would be nice to create a type synonym
 type Option<'T> = internal {Run<'U> : ((unit -> 'U) -> ('T -> 'U) -> 'U)}
 {% endhighlight %}
 
-This doesn't quite work since F# records don't support polymorphic fields. That is, each type variable must be listed on the left hand side of its type definition.It would be silly to require each option value to be parameterized by the return type of a function running it. What is required here is instead an [existentially quantified type](https://downloads.haskell.org/~ghc/5.00/docs/set/existential-quantification.html). Luckily we can achieve this by simply switching to standard interfaces:
+This doesn't quite do the trick since F# records don't support polymorphic fields. That is, each type variable must be listed on the left hand side of its type definition.It would be silly to require each option value to be parameterized by the return type of a function running it. Instead the return type should be [existentially quantified](https://downloads.haskell.org/~ghc/5.00/docs/set/existential-quantification.html). Luckily all that is required is switching to standard interfaces:
 
 {% highlight fsharp %}
 type Option<'T> = abstract member Run : (unit -> 'U) ->  ('T -> 'U) ->  'U
