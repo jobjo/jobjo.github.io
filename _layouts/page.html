@@ -1,0 +1,18 @@
+---
+layout: default
+---
+
+<script type="text/javascript"
+    src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<article {% if page.feature-img %}class="feature-image"{% endif %}>
+
+  <header style="background-image: url('{{ site.baseurl }}/{{ page.feature-img }}')">
+    <h1 class="title">{{ page.title }}</h1>
+  </header>
+
+  <section class="post-content">
+    {{ content }}
+  </section>
+
+</article>

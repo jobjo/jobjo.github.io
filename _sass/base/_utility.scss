@@ -1,0 +1,42 @@
+// mix-ins
+%padding-small {
+  padding: $padding-x-small $padding-x-small * 2;
+  @media (max-width: 1100px) { 
+    padding: $padding-x-small $padding-x-small;
+  }
+}
+
+%padding-regular {
+  // padding: $padding-small $padding-large;
+  padding-left : 25%;
+  padding-right : 25%;
+  padding-top : 10px;
+  @media (max-width: 1100px) { }
+}
+
+
+%link-hover {
+  text-decoration: underline;
+  color: darken($link-color, 15%);
+}
+// buttons
+.button {
+  border-radius: 0.2em;
+  display: inline-block;
+  background-color : $button-background-color;
+  color : white;
+  padding : 0.2em;
+  padding-left : 0.4em;
+  padding-right : 0.4em;
+  font-size : 0.8em;
+  margin-bottom : 1em;
+}
+a.button:hover {
+  background: $link-color;
+  color: $background-color;
+  text-decoration: none;
+}
+// states
+.disabled {
+  opacity: 0.7;
+}
