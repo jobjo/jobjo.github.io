@@ -6,16 +6,17 @@
 */
 
 .highlight {
-  font-size : 0.6em;
   white-space: pre; 
   overflow: auto; 
   word-wrap: normal; /* horizontal scrolling */
   -moz-border-radius: 3px; 
   -webkit-border-radius: 3px; 
   border-radius: 5px;
-  padding: 20px; 
+  padding: 0.5em;
   background: #002b36;
   color: #C1C2C3;
+  margin-top : 1em;
+  margin-bottom : 1em;
 }
 .highlight .hll { background-color: #ffc; }
 .highlight .gd { color: #2e3436; background-color: #0e1416; }
