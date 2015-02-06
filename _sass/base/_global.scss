@@ -60,7 +60,7 @@ pre,
 samp {
   margin : 0;
   font-size : 0.85em;
-  font-weight: bold;
+  
   color : $code-color;
 }
 dt {
@@ -71,10 +71,11 @@ dd {
 }
 p, ol, ul, dl {
   line-height: 1.5;
-  margin-bottom: 0em;
+  margin-bottom: 0.5em;
 }
 ol, ul {
   list-style-position: inside;
+  margin-left : 0.5em;
 }
 hr {
   border: 0;
