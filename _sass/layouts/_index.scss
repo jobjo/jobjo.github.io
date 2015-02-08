@@ -14,7 +14,7 @@
 // post listing
 .posts {
   .post-teaser {
-    @extend %padding-regular;
+    // @extend %padding-regular;
     width: 100%;
     margin-bottom: 0;
     display: inline-block;
@@ -38,4 +38,11 @@
 .pagination {
   padding: $padding-small $padding-large 0 $padding-large;
   text-align: center;
+}
+
+#content-panel
+{
+  width : 800px;
+  margin-left : auto;
+  margin-right: auto;
 }

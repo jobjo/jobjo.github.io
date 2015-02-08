@@ -1,5 +1,6 @@
 .site-header {
-  @extend %padding-small;
+  // @extend %padding-small;
+  padding-bottom : 1em;
   background: $brand-color;
   border-bottom: 1px solid $border-color;
   display: inline-block;

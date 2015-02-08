@@ -1,5 +1,6 @@
 article {
-  @extend %padding-regular;
+
+  // @extend %padding-regular;
   border-bottom: 1px solid $border-color;
   float: left;
   width: 100%;
@@ -13,9 +14,11 @@ article {
   .footnotes {
     font-size: 0.9em;
   }
+
 }
 
 header {
+  margin-top : 1.5em;
   h1 {
     margin: 0;
   }
@@ -27,6 +30,7 @@ header {
     text-transform: uppercase;
   }
 }
+
 .feature-image {
   padding: 0%;
   .post-link {
@@ -45,3 +49,4 @@ header {
     @extend %padding-regular;
   }
 }
+
