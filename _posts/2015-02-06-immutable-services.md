@@ -2,7 +2,7 @@
 layout: post
 title: Designing services on top of immutable data structures
 ---
-Immutable data structures enables equational reasoning and assures that update operations are atomic. However, purely immutable interfaces are not always feasible. For instance a *RESTful* service typically needs to propagate the effects of update operations to other clients. In this post I describe a strategy for constructing mutable service interfaces on top of purely immutable data structures. I'm using F# to exemplify.
+Using immutable data structures enables equational reasoning and assures that update operations are atomic. However, purely immutable interfaces are not always feasible. For instance a *RESTful* service typically needs to propagate the effects of update operations to other clients. In this post I describe a strategy for constructing mutable service interfaces on top of purely immutable data structures. I'm using F# to exemplify.
 
 ## Building a Player Service
 Consider the task of designing a service for managing player information for some online game. The core API needs to support methods for retrieving and updating a set of players given some search criterion; Here is simple interface capturing the requirements:
@@ -144,8 +144,7 @@ Following is an example of programming with the interface:
 let service =
     buildPlayerService [ "John" ; "Jane" ; "James" ] 
     
-
-// Extracts the credit
+// Extracts credit from player with the given name.
 let checkCredit name =
     match service.FindPlayers {Names = [name]} with
     | [p]   -> p.Credit
