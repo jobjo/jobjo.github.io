@@ -2,12 +2,13 @@
 layout: post
 title: Designing a library for printing recursive data-structures
 ---
-As a functional programmer I often run into to situations where I need to pretty print some values from a recursive data structure - be it a prefix search tree, a language expression, XML data or something else.
+Doing functional programming, I've more than once ran into situations in where I needed to pretty print values from a recursive data structure - be it a prefix search tree, a language expression, XML data or something else.
 
-Getting tired of having to implement the same type of functions for printing values (often for debugging purposes) I decided to generalize the pattern. In this post I discuss the design of a tiny library for solving this particular problem. To be fair the solutions itself is rather trivial but it provides a good opportunity to touch on quite a few different concepts in library design. 
+Getting tired of having to implement the same type of functions for printing values (often for debugging purposes) I decided to generalize the pattern. In this post I discuss the design of a tiny library for solving this particular problem. This is not a hard problem but it provides a good opportunity to touch on some of the fundamental concepts of functional programming.
+
 
 ## The Problem
-To give a concrete example - Consider a type representing XML data:
+To give a motivating example - Consider a type representing XML data:
 
 {% highlight fsharp %}
 type Attribute = string * string
@@ -18,7 +19,9 @@ type XML =
 
 An `Attribute` is key-value pair and an `XML` node is either some text or a node with attributes and a list of children.
 
-Given a value of this type we'd like to be able to render it as a nested set of blocks with proper indentation levels. What would a library for such a thing look like? It's clear that we need some kind of abstraction so let's start by giving it a name. I call it `Printer`. What kind of operations are needed in order satisfy the initial requirements? It's clean that we need a function for turning a printer into a string:
+Given a value of this type we'd like to be able to render it as a nested set of blocks with proper indentation levels. What would a library for such a thing look like? 
+
+It's clear that we need some kind of abstraction so let's start by giving it a name. I call it `Printer`. What kind of operations are needed in order satisfy the initial requirements? It's clear that we need a function for turning a printer into a string:
 
 {% highlight fsharp %}
 /// Executes a printer, producing a string value.
@@ -159,8 +162,90 @@ Last one is `add`:
 {% highlight fsharp %}
 let add p1 p2 = fun indent -> p1 indent + p2 indent
 {% endhighlight %}
-Which simply runs both printers concatenating their output.
+Which simply runs both printers and concatenates their output.
 
+We also need to ensure that the implementations is compatible with the constraints regarding semantics. 
+
+First,  `print >> run` should be the identity function:
+
+{% highlight fsharp %}
+(print >> run) s                                                    =
+run (print s)                                                       =
+run (fun indent -> indent 0 s)                                      =
+(fun indent -> indent 0 s) (fun n s -> sprintf "%s%s" (space n) s)  =
+sprintf "%s%s" (space 0) s)                                         =
+s
+{% endhighlight %}
+
+We also need to check that a printer fulfills the monoid constraints for `add`
+and `empty`. Here is is the proof for left identity (2):
+
+{% highlight fsharp %}
+add p empty =
+fun indent -> p indent + empty indent                               =
+fun indent -> p indent + ((fun _ -> "") indent)                     =
+fun indent -> p indent + ""                                         =
+fun indent -> p indent                                              =
+p
+{% endhighlight %}
+In fact, these properties follow from the *monoid* properties of *string*. The proof is the other direction is symmetric. We also need to show that `add` is associative:
+
+{% highlight fsharp %}
+add p1 (add p2 p3)                                                  =
+fun ind -> p1 ind + ((add p2 p3) ind)                               =
+fun ind -> p1 ind + ((fun ind -> p2 ind + p3 ind)   ind)            =
+fun ind -> p1 ind + p2 ind + p3 ind                                 =
+fun ind -> (p1 ind + p2 ind) + p3 ind                               =
+add (add p1 p2) p3
+{% endhighlight %}
+
+Again, the proof relies on the associativity of string concatenation.
+
+To wrap it up, below is the complete listing of the implementation. I made the definition of `Printer` private, added a function for running printers with a custom indentation function. Finally added two operator aliases for `sequence` and `print`, and `add`:
+
+{% highlight fsharp %}
+open System
+
+/// A printer is a function from an indentation level to a list of strings.
+type Printer = private { Run : (int -> string -> string) -> string}
+
+/// Creates a printer.
+let private mkPrinter f = {Run = f}
+
+/// Creates a string of whitespace of the given length.
+let private space n = String.Join("", List.replicate (n * 2) " ")
+
+/// Create a printer from  a string.
+let print s = mkPrinter <| fun indent -> indent 0 s
+
+/// Indents a printer.
+let indent p = mkPrinter <| fun indent -> p.Run ((+) 1 >> indent)
+
+/// Runs a printer returning a string.
+let runWith indent p = p.Run indent
+
+/// Runs a printer returning a string.
+let run = runWith <| fun n -> sprintf "%s%s\n" (space n)
+
+/// An empty printer.
+let empty = mkPrinter <| fun _ -> ""
+
+/// Adds two printers.
+let add tp1 tp2 = mkPrinter <| fun indent ->
+     tp1.Run indent + tp2.Run indent
+
+/// Concatenates a sequence of printers.
+let sequence ps = Seq.fold add empty ps
+
+/// Short for sequence.
+let (!<) = sequence
+
+/// Short for add.
+let (<+>) = add
+
+/// Short for print.
+let (!) = print
+{% endhighlight %}
 
 <!--
 Thinking of the library as a small embedded domains specific language (EDSL), there are broadly speaking two implementation strategies - *Deep* versus *shallow* embedding. Deep embeddings use a data structure that preserves the expression structure of the operations; This generally enables more optimization capabilities and also makes it possible to provide multiple *interpreters*. In a shallow embedding no intermediate data structure is used for building up expression trees, instead the semantics of an operation is part of its definition.
