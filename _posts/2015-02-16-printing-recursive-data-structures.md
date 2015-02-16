@@ -70,9 +70,7 @@ let htmlPrinter =
             sequence [
                 print "<body>"
                 indent <| 
-                    sequence [
-                        print "Printed"
-                    ]
+                    print "Printed"
                 print "</body>"
             ]
         print "</html>"
@@ -501,9 +499,7 @@ let htmlPrinter =
             sequence [
                 print "<body>"
                 indent <| 
-                    sequence [
-                        print "Printed"
-                    ]
+                    print "Printed"
                 print "</body>"
             ]
         print "</html>"
