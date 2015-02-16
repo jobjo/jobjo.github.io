@@ -2,7 +2,7 @@
 layout: post
 title: Designing a library for printing recursive data structures
 ---
-I have more than once found myself in need of a function for pretty-printing values of some recursive data structure; Be it a *prefix search tree*, an *abstract syntax tree* for a *domain specific language*, XML or something else. Getting tired of having to implement the same type of logic over and again I decided to generalize the pattern. In the following sections I discuss the design of a tiny library for addressing this problem. It's not a particularly challenging task but provides a good opportunity to touch on a few different concepts in functional programming. Examples include *deep* and *shallow embeddings*, [monoids] and *equational reasoning*.
+I have more than once found myself in need of a function for pretty-printing values of some recursive data structure; Be it a *prefix search tree*, an *abstract syntax tree* for a *domain specific language*, XML or something else. Getting tired of having to implement the same type of logic over and again I decided to generalize the pattern. In the following sections I discuss the design of a tiny library for addressing this problem. It's not a particularly challenging task but provides a good opportunity to touch on a few different concepts in functional programming. Examples include *deep* and *shallow embeddings*, [monoids] and *equational reasoning*. The implementation is given in F#.
 
 ## The Problem
 To give a motivating example, consider a (simplistic) type for representing XML data:
