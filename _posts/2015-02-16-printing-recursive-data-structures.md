@@ -2,10 +2,10 @@
 layout: post
 title: Designing a library for printing recursive data structures
 ---
-I've more than once run into situations in where I needed to pretty-print values from some recursive data structure - be it a prefix search tree, a language expression, XML or something else. Getting tired of having to implement the same type of functions over and again I decided to generalize the pattern. In this post I discuss the design of a tiny library for solving this particular problem. It's not a very challenging task in itself but provides a good opportunity to touch on a few different concepts in functional programming such as *deep* and *shallow embeddings*, [monoids] and *equational reasoning*.
+I have more than once found myself in need of a function for pretty-printing values of some recursive data structure; Be it a *prefix search tree*, an *abstract syntax tree* for a *domain specific language*, XML or something else. Getting tired of having to implement the same type of logic over and again I decided to generalize the pattern. In the following sections I discuss the design of a tiny library for addressing this problem. It's not a particularly challenging task but provides a good opportunity to touch on a few different concepts in functional programming. Examples include *deep* and *shallow embeddings*, [monoids] and *equational reasoning*.
 
 ## The Problem
-To give a motivating example, consider the following type for representing XML data:
+To give a motivating example, consider a (simplistic) type for representing XML data:
 
 {% highlight fsharp %}
 /// Attribute
@@ -17,11 +17,12 @@ type XML =
     | Node of string * list<Attribute> * list<XML>
 {% endhighlight %}
 
-An `Attribute` is key-value pair and an `XML` node is either some text or a node with attributes and a list of children.
+An `Attribute` is key-value pair and an `XML` node is either some text or an element with attributes and a list of children.
 
-Given a value of this type, we wish to rendere it as a nested set of blocks with proper indentation levels.
+Given a value of this type, how can we render it as a nested set of blocks with proper indentation levels?
 
-It's clear that we need some kind of abstraction so let's start by giving it a name, I call it `Printer`.  At the bare minimum we also need a function for evaluating a printer by turning it into a string:
+## Deriving the API
+In order to design a generalized API we need some kind of abstraction so let's start by giving it a name; I call it `Printer`.  At the bare minimum we also need a function for evaluating a printer by turning it into a string:
 
 {% highlight fsharp %}
 /// Executes a printer, producing a string value.
@@ -117,9 +118,9 @@ To ensure that the semantics is intuitive, there are a number of constraints tha
 4. `forall p1,p2,p3: add p1 (add p2 p3) = add (add p1 p2) p3`
 5. `forall p1,p2,p3: indent (add p1 p2) = add (indent p1) (indent p2)`
 
-(1) states that `run` is the inverse of `print`, i.e. printing a string and then running it gives back the same string. (2) and (3) means that `empty` must be *left* and *right identtity* for `add` which is required in order for `Printer` to form a [monoid]. (4) is also part of the [monoid] constraints and implies that `add` is associative. (5) states that `indent` is [distributive](http://en.wikipedia.org/wiki/Distributive_property) over `add`; This is needed for safely being able to refactor expressions.
+(1) states that `run` is the inverse of `print`, i.e. printing a string and then running it gives back the same string. (2) and (3) means that `empty` must be *left* and *right identity* for `add` which is required for `Printer` to form a [monoid]. (4) is also part of the [monoid] constraints and implies that `add` is associative. (5) states that `indent` is [distributivee](http://en.wikipedia.org/wiki/Distributive_property) over `add`; This is needed for safely being able to refactor expressions.
 
-Guarenteeing (2), (3) and (4) is nececary in order to provide intuitive semantics for `sequence`, for instancee by ensuring that the following two printers are identical:
+Guaranteeing (2), (3) and (4) is necessary in order to provide intuitive semantics for `sequence`, for instance by ensuring that the following two printers are identical:
 
 {% highlight fsharp %}
 let pc1 = sequence [ p1; p2; p3 ]
@@ -374,7 +375,7 @@ Each language construct is handled separately with `Indent` and `Add` traversing
 
 What about the semantics, how do we prove that the definition is compatible with the constraints listed above? What we really need to check is the validity of expressions with respect to a particular interpreter (in this case `run`). For instance looking at constraint (4) concerning associativity of `add`: `(add p1 (add p2 p3) = add (add p1 p2) p3)`, we're not interested in whether these expressions are identical or not; Only that they produce the same output for a given interpreter. However, whenever we are able to show that two expression are in fact identical it naturally follows that all possible interpretations are identical.
 
-Showing that constraints (1) and (4) holds is similar to the example above. For left and right identity (2,3) it's possible to leverage the definition of `add` canceling out `Empty` values, but only in case the type constructors are hidden in order to rule out the construction of values such as `(Add (Print "Hello"), Empty)`. This fact introduces a subtle problem; On the one hand exposing the printer type is necessary in order to allow different interpretors to be defined. On the other hand, providing access to the constructors removes the control over how values are constructed. One solution would be to expose the core definitions in a separate module.
+Showing that constraints (1) and (4) holds is similar to the example above. For left and right identity (2,3) it's possible to leverage the definition of `add` canceling out `Empty` values, but only in case the type constructors are hidden in order to rule out the construction of values such as `(Add (Print "Hello"), Empty)`. This fact introduces a subtle problem; On the one hand exposing the printer type is necessary for allowing different interpretors to be defined. On the other hand, providing access to the constructors removes the control over how values are constructed. One solution would be to expose the core definitions in a separate module.
 
 Using equational reasoning is slightly more complicated given the imperative style of the `runWith` function. The complete proofs are left as an exercise. 
 
@@ -462,7 +463,7 @@ let (<+>) = add
 let (!) = print
 {% endhighlight %}
 
-At last, in order to illustrate how it is possible to define alternative interpretors of printer expressions, consider the following example that shows a printer as F# code for constructing the expression itself:
+At last, to illustrate how it is possible to define alternative interpretors of printer expressions, consider the following example that shows a printer as F# code for constructing the expression itself:
 
 {% highlight fsharp %}
 let showFSharp : Printer -> string =
