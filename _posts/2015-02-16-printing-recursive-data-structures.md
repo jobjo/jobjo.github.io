@@ -99,15 +99,15 @@ Here is the complete set of combinators defining the `API`:
 
 {% highlight fsharp %}
 type Printer
-
+/// Evaluates a printer.
 val run : Printer -> string
-
+/// Create a printer that prints the given string.
 val print : string -> Printer
-
+/// Indent a printer one level.
 val indent : Printer -> Printer
-
+/// The empty printer doesn't output anything.
 val empty : Printer
-
+/// Add two printers in a sequence.
 val add : Printer -> Printer -> Printer
 {% endhighlight %}
 
@@ -119,27 +119,29 @@ To ensure that the semantics is intuitive, there are a number of constraints tha
 4. `forall p1,p2,p3: add p1 (add p2 p3) = add (add p1 p2) p3`
 5. `forall p1,p2,p3: indent (add p1 p2) = add (indent p1) (indent p2)`
 
-(1) states that (`run` is the inverse of `print`), i.e. printing a string and then running it gives back the same string. (2) and (3) means that `empty` must be left and right identtity for `add` and required in order for printer to form a [monoid]. (4) is also are part of the [monoid] constraints and implies that `add` is associative. (5) states that `indent` is [distributive](http://en.wikipedia.org/wiki/Distributive_property) over `add` (and also resembles the [functor] laws). It's required for safely being able to refactor expressions.
+(1) states that `run` is the inverse of `print`, i.e. printing a string and then running it gives back the same string. (2) and (3) means that `empty` must be *left* and *right identtity* for `add` which is required in order for `Printer` to form a [monoid]. (4) is also part of the [monoid] constraints and implies that `add` is associative. (5) states that `indent` is [distributive](http://en.wikipedia.org/wiki/Distributive_property) over `add`; This is needed for safely being able to refactor expressions.
 
-Guarenteeing (2), (3) and (4) is nececary in order to be able to implement have intuitive semantics for `sequence`. For instancee by ensuring that the following two printers are identical:
+Guarenteeing (2), (3) and (4) is nececary in order to provide intuitive semantics for `sequence`, for instancee by ensuring that the following two printers are identical:
 
 {% highlight fsharp %}
 let pc1 = sequence [ p1; p2; p3 ]
 let pc2 = sequence [p1 ; sequence [p2; p3]]
 {% endhighlight %}
 
+This is exactly why the [monoid] pattern is so useful.
+
 ## A shallow embedding
 To complete the library we now need to find a definition of the type `Printer`that allows for a feasible implementations of the required functions.
 
-Thinking of the library as a small *Embedded Domain Specific Language* (EDSL), there are broadly speaking two implementation strategies available - *Deep* and *shallow* embeddings. Deep embeddings preserve the expression structure of the operations; This generally enables more optimization capabilities and also makes it possible to provide multiple *interpreters*. In a shallow embedding no intermediate data structure are used for building up expression trees, instead the semantics of an operation is part of its definition. 
+Thinking of the API as a small *Embedded Domain Specific Language* (EDSL), there are broadly speaking two implementation strategies available - *Deep* and *shallow* embeddings. Deep embeddings preserve the expression structure of the operations; This generally enables more optimization capabilities and also makes it possible to provide multiple *interpreters*. In a shallow embedding no intermediate data structure is used for building up expression trees, instead the semantics of an operation is part of its definition. 
 
-Let's start by the simplest possible solution, not worrying about weather to support multiple interpreters or not. Applying the principal of [Denotational Design](http://conal.net/papers/type-class-morphisms/type-class-morphisms-long.pdf), we need to precisely define what it *means* to be a `Printer`. A printer is something that has the ability to print a nested structure. Parameterizing over the choice of how to print a line given an indentation level, this can be represented by the following function:
+Let's start by the simplest possible solution, not worrying about whether to support multiple interpreters or not. Applying the principal of [Denotational Design](http://conal.net/papers/type-class-morphisms/type-class-morphisms-long.pdf), we need to precisely define what it *means* to be a `Printer`. A printer is something that has the ability to output a nested structure. Parameterizing over the choice of how to print a line given an indentation level, this can be represented by the following function:
 
 {% highlight fsharp %}
     type Printer = (int -> string -> string) -> string
 {% endhighlight %}
 
-In other words, a printer is a *black-box* that when applied to a function from an indentation level and a string to string, returns a pretty-printed structure. All the information of what to output is captured within the closure of the function. The fact that it's opaque, i.e. it is not possible to peek inside a printer to find out how it was constructed, places it in the category of *shallow embeddings*.
+In other words a printer is a *black-box* that when applied to a function from an indentation level and a string to string, returns a pretty-printed structure. All the information of what to output is contained within the closure of the function. The fact that it's opaque, i.e. that it is not possible to peek inside a printer to find out how it was constructed, places it in the category of *shallow embeddings*.
 
 Let's see if the type is sufficient for implementing the interface. Starting with `run`:
 
@@ -160,7 +162,7 @@ let print s = fun ind -> ind 0 s
 
 The function turns a string into a printer that invokes the indentation argument with level 0.
 
-To implement `indent` we need to transform a printer into a new one that adds one to the indentation level when applying the indent function:
+To implement `indent` we need to transform a printer into a new one that when executed invokes its given indent function with a greater indentation level:
 
 {% highlight fsharp %}
 let indent p = fun ind -> p (fun n -> ind (n + 1))
@@ -179,7 +181,7 @@ let add p1 p2 = fun ind -> p1 ind + p2 ind
 {% endhighlight %}
 Which simply runs both printers and concatenates their output.
 
-We also need to ensure that the implementations is compatible with the constraints regarding the semantics. 
+We further need to ensure that the implementation is compatible with the constraints regarding the semantics. 
 
 First,  `(print >> run)` must be equivalent with the identity function:
 
@@ -197,8 +199,7 @@ sprintf "%s%s" (space 0) s)                                         =
 s
 {% endhighlight %}
 
-We also need to check that a printer fulfills the [monoid] constraints for `add`
-and `empty`. Here is is the proof for left identity (2):
+What about the [monoid] constraints for `add` and `empty`? Here is a proof for left identity (2):
 
 {% highlight fsharp %}
 add p empty =
