@@ -28,7 +28,7 @@ It's clear that we need some kind of abstraction so let's start by giving it a n
 val run : Printer -> string
 {% endhighlight %}
 
-Now, let's think about how to produce printers. We should naturally provide a function for lifting simple string values into printers:
+Let's think about how to produce printers. We should naturally provide a function for lifting simple string values into printers:
 
 {% highlight fsharp %}
 /// Produces a printer that prints a string.
@@ -42,7 +42,7 @@ The interesting part is the ability to achieve nesting or indentation. The most 
 val indent : Printer -> Printer
 {% endhighlight %}
 
-Finally we need some means to compose printers; Let's require that our printer type forms a [monoid] by introducing an empty printer and a binary operator for combining two printers:
+Finally we need some means for composing printers; One way to achieve compositionality is to require that our printer type forms a [monoid] by introducing an empty printer along with a binary operator for combining two printers:
 
 {% highlight fsharp %}
 /// Doesn't print anything.
@@ -52,14 +52,14 @@ val empty : Printer
 val add : Printer -> Printer -> Printer
 {% endhighlight %}
 
-You may wonder what good `empty` brings. One benefit is getting *sequencing* for free, that is the ability to combine a list of printers:
+You may wonder what good `empty` brings; One benefit is getting *sequencing* for free, that is the ability to combine a list of printers:
 
 {% highlight fsharp %}
 /// Sequences a list of printers.
 let sequence : seq<Printer> -> Printer = Seq.fold add empty
 {% endhighlight %}
 
-Using the interface above, it's straight forward to print nested documents. Here is an example for manually outputting some HTML:
+With the above interface, printing nested documents is straight forward. Here is an example for manually outputting some HTML:
 
 {% highlight fsharp %}
 // Define a custom printer.
@@ -128,7 +128,7 @@ let pc1 = sequence [ p1; p2; p3 ]
 let pc2 = sequence [p1 ; sequence [p2; p3]]
 {% endhighlight %}
 
-This is exactly why the [monoid] pattern is so useful.
+This is exactly why the [monoid] pattern is useful.
 
 ## A shallow embedding
 To complete the library we now need to find a definition of the type `Printer`that allows for a feasible implementations of the required functions.
