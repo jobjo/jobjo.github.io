@@ -462,7 +462,7 @@ let (<+>) = add
 let (!) = print
 {% endhighlight %}
 
-At last, to illustrate how it is possible to define alternative interpretors of printer expressions, consider the following example that shows a printer as F# code for constructing the expression itself:
+At last, to illustrate that it is possible to define alternative interpretors of printer expressions, consider the following example that given a printer, generates F# code for printing the expression itself:
 
 {% highlight fsharp %}
 let showFSharp : Printer -> string =
@@ -488,7 +488,7 @@ let showFSharp : Printer -> string =
     show >> run
 {% endhighlight %}
 
-using this function on the initial `htmlPrinter`  example, we actually retrieve and equivalent F# expression for defining the printer:
+Using this function on the initial `htmlPrinter`  example, we actually retrieve and equivalent F# expression recreating the printer:
 
 {% highlight fsharp %}
 // Define a custom printer.
@@ -533,8 +533,7 @@ Add (
   Print "</html>"
 )
 {% endhighlight %}
-
-Which is in fact vaalid F#. This would not have been possible using the shallow embedding.
+Which in fact is valid F#. This would not have been possible using the shallow embedding.
 
 ## Summary
 In this post I've addressed the problem of designing a library for pretty-printing recursive data structures. The approach taken is general and starts by identifying a minimal set of operations needed and then for each operation define a set of constraints (or *laws*) that any implementation must obey.
