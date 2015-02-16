@@ -63,7 +63,6 @@ let sequence : seq<Printer> -> Printer = Seq.fold add empty
 With the above interface, printing nested documents is straight forward. Here is an example for manually outputting some HTML:
 
 {% highlight fsharp %}
-// Define a custom printer.
 let htmlPrinter =
     sequence [
         print "<html>"
