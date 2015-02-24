@@ -76,7 +76,7 @@ Associated with the following set of rules:
 * $$\eta$$-reduction: $$\lambda x.Mx \rightarrow^{\eta} M $$ 
 
 
-### Functions in F#
+### Functions in F\#
 
 
 {% highlight fsharp %}
