@@ -1,28 +1,38 @@
 ---
 layout: page
-title: Design patterns for functinal programming
+title: Design patterns for functional programming
 ---
 
-## Why study functional programming
+# Session 1 - The Category Pattern
+
+In this session we introduced functional programming and its foundation in mathematics.
+We showed that functional programming is based on $$\lambda$$-calculus and also presented
+*Category Theory* as a tools for reasoning about programs. In particular we were able to
+show that functions and data types form a Category, using F# to exemplify.
+
+Finally we introduced two ways of constructing types, *Products* and *Co-products*, and their
+categorical description.
+
+Here are the note based on the slides. The last section contains a few exercises.
+
+## Introduction
+
+#### Why study functional programming?
 
 * Fun
-* Write expressive, modular, composable and elgegant code.
+* Write expressive, modular, composable and elegant code.
 * Reason about code and its composition (But, aren't these the buzzwords used to sell object orientation?).
-* Forget low level *concurrency* primitives
-* Understand map-reduce
-
-### Introduction
+* Forget low level *concurrency* primitives.
+* Understand map-reduce.
 
 
 #### OO vs. FP
-
 
 If OO and FP both are claiming that they solve the same problems important to all software engineers, why neither of them does?
 
 * There is no uniform accepted definition of object-orientation 
 * The two might be orthogonal (Scala) and even cross-definable (Martin Odersky and Dotty)
 * In contrast FP is ill defined, but there is a uniform theory. 
-
 
 #### Ancient history
 
@@ -33,10 +43,6 @@ The theory of functional programming is a byproduct of the quest for the foundat
 * 1930 - Church and $$\lambda$$-calculus.
 * 1947 - MacClane and Category theory.
 
-*******************************************************************************
-
-### Introduction
-
 #### Languages
 
 * 1957, McCarthy LISP - using $$\lambda$$-calculus for actual programming.
@@ -45,7 +51,7 @@ The theory of functional programming is a byproduct of the quest for the foundat
 * We will use F# as a vehicle for showing the principles of functional programming.
 
 
-### Functions
+## Functions
 
 #### Properties of functions 
 
@@ -91,7 +97,8 @@ let concat' s1 s2 = s1 + " " + s2
 {% endhighlight %}
 
 
-#### Explicitly typed parameters
+In case no type annotations are given the F# compiler infers the type.
+Definitions can also have explicity type annotations:
 
 {% highlight fsharp %}
 
@@ -101,253 +108,106 @@ let addTwo (x: int) = x + 2
 
 let concat (s1: string) s2 : string = s1 + " " +  s2
 
-{% endhighlight   %}
+{% endhighlight %}
 
 #### Recursion
     
+
+    
 {% highlight fsharp %}
-
-// Recursion
-let factorial (n: int) : int = ???
-
 // Example
 factorial 4 = 4 * 3 * 2 * 1
-
-{% endhighlight %}
-
-
-#### Recursion
+{% endhighlight %}    
 
 {% highlight fsharp %}
-
-// Constant
-let answer = 42
-
-// One argument function
-let addTwo = fun x -> x + 2
-
-// Equivalent
-let addTwo' x = x + 2
-
-// Function of two arguments
-let concat fun s1 -> fun s2 -> s1 + " " + s2
-
-// Equivalent
-let concat' s1 s2 = s1 + " " + s2
-
+// Recursion
+let rec factorial n =
+    if n <= 0 then 
+        1
+    else
+        n * (factorial (n - 1))
 {% endhighlight %}
 
-#### Explicitly typed parameters
+Mutual recursion is defined by `let rec .. and`:
+{% highlight fsharp %}
+let rec isEven n = 
+    if n < 0 then 
+        isEven -n 
+    elif n = 0 then
+        true
+    else 
+        isOdd (n - 1)
+and isOdd n = 
+    if n = 0 then 
+        false 
+    else 
+        isEven (n - 1)
+{% endhighlight %}
+
+#### Function composition
 
 {% highlight fsharp %}
+let isEven (n: int) : bool = n % 2 = 0
 
-let answer : int = 42
+let length (s: string) : int = s.Length
 
-let addTwo (x: int) = x + 2
-
-let concat (s1: string) s2 : string = s1 + " " +  s2
+let hasEvenLength = length >> isEven
 {% endhighlight %}
 
-#### Recursion
-    
-    // Recursion
-    let factorial (n: int) : int = ???
+{% highlight fsharp %}
+let compose (f: 'B -> 'C) (g: 'A -> 'B) : 'A -> 'C = fun x -> f (g x)
 
-    // Example
-    factorial 4 = 4 * 3 * 2 * 1
-    
+let (<<) = compose
 
-    // Constant
-    let answer = 42
+let (>>) g f = compose f g
+{% endhighlight %}
 
-    // One argument function
-    let addTwo = fun x -> x + 2
+{% highlight fsharp %}    
+let isEven (n: int) : bool = n % 2 = 0
 
-    // Equivalent
-    let addTwo' x = x + 2
+let length (s: string) : int = s.Length
 
-    // Function of two arguments
-    let concat fun s1 -> fun s2 -> s1 + " " + s2
+let trim (s: string) : string = s.Trim()
 
-    // Equivalent
-    let concat' s1 s2 = s1 + " " + s2
-
-*******************************************************************************
-### Functions in F#
-#### Explicitly typed parameters
-
-    let answer : int = 42
-
-    let addTwo (x: int) = x + 2
-
-    let concat (s1: string) s2 : string = s1 + " " +  s2
-
-*******************************************************************************
-### Functions in F#
-#### Recursion
-    
-    // Recursion
-    let factorial (n: int) : int = ???
-
-    // Example
-    factorial 4 = 4 * 3 * 2 * 1
-*******************************************************************************
-### Functions in F#
-#### Recursion
-    // Constant
-    let answer = 42
-
-    // One argument function
-    let addTwo = fun x -> x + 2
-
-    // Equivalent
-    let addTwo' x = x + 2
-
-    // Function of two arguments
-    let concat fun s1 -> fun s2 -> s1 + " " + s2
-
-    // Equivalent
-    let concat' s1 s2 = s1 + " " + s2
-
-*******************************************************************************
-### Functions in F#
-#### Explicitly typed parameters
-
-    let answer : int = 42
-
-    let addTwo (x: int) = x + 2
-
-    let concat (s1: string) s2 : string = s1 + " " +  s2
-
-*******************************************************************************
-### Functions in F#
-#### Recursion
-    
-    // Recursion
-    let factorial (n: int) : int = ???
-
-    // Example
-    factorial 4 = 4 * 3 * 2 * 1
-*******************************************************************************
-### Functions in F#
-#### Recursion
-    
-    // Recursion
-    let rec factorial n =
-        if n <= 0 then 
-            1
-        else
-            n * (factorial (n - 1))
-
-*******************************************************************************
-
-### Functions in F#
-#### Recursion
-
-    // Mutual recursion
-    let rec isEven n = 
-        if n < 0 then 
-            isEven -n 
-        elif n = 0 then
-            true
-        else 
-            isOdd (n - 1)
-    and isOdd n = 
-        if n = 0 then 
-            false 
-        else 
-            isEven (n - 1)
-
-*******************************************************************************
-### Function composition
-
-    let isEven (n: int) : bool = n % 2 = 0
-
-    let length (s: string) : int = s.Length
-
-    let hasEvenLength = ???
+let hasEvenNumChars = trim >> length >> isEven
+{% endhighlight %}
 
 
-*******************************************************************************
-### Function composition
-
-    let isEven (n: int) : bool = n % 2 = 0
-
-    let length (s: string) : int = s.Length
-
-    let hasEvenLength s = isEven (length s)
-
-*******************************************************************************
-### Function composition
-
-    let isEven (n: int) : bool = n % 2 = 0
-
-    let length (s: string) : int = s.Length
-
-    let hasEvenLength = length >> isEven
-
-
-*******************************************************************************
-### Function composition
-
-    let compose (f: 'B -> 'C) (g: 'A -> 'B) : 'A -> 'C = fun x -> f (g x)
-    
-    let (<<) = compose
-    
-    let (>>) g f = compose f g
-
-
-*******************************************************************************
-### Function composition
-    
-    let isEven (n: int) : bool = n % 2 = 0
-
-    let length (s: string) : int = s.Length
-
-    let trim (s: string) : string = s.Trim()
-
-    let hasEvenNumChars = trim >> length >> isEven
-
-*******************************************************************************
-### Function composition
 #### Associativity
-    let hasEvenNumChars1 = trim >> (length >> isEven)
-    let hasEvenNumChars2 = (trim >> length) >> isEven
+{% highlight fsharp %}
+let hasEvenNumChars1 = trim >> (length >> isEven)
+let hasEvenNumChars2 = (trim >> length) >> isEven
+{% endhighlight %}
+
+Is (>>) associative?
+{% highlight fsharp %}
+(f >> g) >> h                               =
+// Definition of (>>)                       
+(fun x -> g (f x)) >> h                     =
+// Definition of (>>)                       
+(fun y -> h ((fun x -> g (f x) y)           =
+// Beta reduction                           
+(fun y -> h (g (f y)))                      =
+
+f >> (g >> h)                               =
+// Definition of (>>)
+fun x -> (g >> h) (f x)                     =
+// Definition of (>>)
+fun x -> (fun y -> h (g y)) (f x)           =
+// Beta reduction
+fun x -> h (g (f x))                        =
+// Alpha conversion
+fun y -> h (g (f y))                        =
+{% endhighlight %}
 
 
-*******************************************************************************
-### Function composition
-#### Is (>>) associative?
-
-    (f >> g) >> h                               =
-    // Definition of (>>)                       
-    (fun x -> g (f x)) >> h                     =
-    // Definition of (>>)                       
-    (fun y -> h ((fun x -> g (f x) y)           =
-    // Beta reduction                           
-    (fun y -> h (g (f y)))                      =
- 
-    f >> (g >> h)                               =
-    // Definition of (>>)
-    fun x -> (g >> h) (f x)                     =
-    // Definition of (>>)
-    fun x -> (fun y -> h (g y)) (f x)  
-    // Beta reduction
-    fun x -> h (g (f x))
-    // Alpha conversion
-    fun y -> h (g (f y))
-
-*******************************************************************************
-### Categories
+## Categories
 A category $$\mathcal{C}$$ is defined as:
 
 1.  A set of objects, denoted $$Ob(\mathcal{C})$$
 
 2. A set of arrows, $$Arr(\mathcal{C})$$ with functions  $$Dom,Codom  \in Arr(\mathcal{C}) \rightarrow Ob(\mathcal{C})$$
 
-
-*******************************************************************************
-### Categories
 
 * Operation $$\circ \in Arr(C) \times Arr(C) \rightarrow Arr(C)$$, s.t. $$\forall f,g \in Arr(C)$$ with $$Codom(f) = Dom(g)$$, $$\exists g \circ f$$ and $$Dom(g \circ f) = Dom(f)$$ and $$Codom(g \circ f) = Codom(g)$$ 
 
@@ -357,36 +217,30 @@ A category $$\mathcal{C}$$ is defined as:
 
 * Identity: if $$f : A \longrightarrow_{f} B$$ then $$id_B \circ f = f \circ id_A = f$$
 
-*******************************************************************************
-### Categories
-![Category](images/category.png)
+![Category](img/category.png)
+
+#### The Category of data and functions
+{% highlight fsharp %}
+// Composition operator
+let (<<) f g = fun x -> f (g (x))
+
+// Identity
+let id (x: 'T) : 'T = x
+{% endhighlight %}
+
+{% highlight fsharp %}
+// Associativity
+(f >> g) >> h = f >> (g >> h)
+
+// Left identity
+f >> id = f
+
+// Right identity
+id >> g = g
+{% endhighlight %}
 
 
-*******************************************************************************
-### The Category of data and functions
-
-    // Composition operator
-    let (<<) f g = fun x -> f (g (x))
-
-    // Identity
-    let id (x: 'T) : 'T = x
-
-*******************************************************************************
-### The Category of data and functions
-
-    // Associativity
-    (f >> g) >> h = f >> (g >> h)
-
-    // Left identity
-    f >> id = f
-
-    // Right identity
-    id >> g = g
-
-
-*******************************************************************************
-### Types
-#### Types for functions
+## Types
 
 * There is a problem. You can't really take simple untyped $$\lambda$$-calculi as a good guide for calculations.
 
@@ -394,10 +248,7 @@ A category $$\mathcal{C}$$ is defined as:
 
 * To defeat this Church and Curry introduced types to $$\lambda$$-calculi and made it a firm foundation for computation.
 
-*******************************************************************************
 
-### Types
-#### Remarks
 - Types are essential to maintain consistency in a formal
     system. In $$\lambda$$-calculi type-able terms are
     terminating calculations (normalisation).
@@ -409,375 +260,208 @@ A category $$\mathcal{C}$$ is defined as:
     assuring absence of segmentation faults, but are essential tools
     within the compilers to check correctness. 
 
-*******************************************************************************
-### Types in F#
-#### Built in
+### Types in F\#
+Built in:
+{% highlight fsharp %}
+int, bool, char, unit, float, string
+{% endhighlight %}
 
-    int, bool, char, unit, float, string
+#### Products:
+{% highlight fsharp %}
+// Tuples
+let myTuple : (int * string * bool) = (42, "The answer", true)
+{% endhighlight %}
 
-*******************************************************************************
-### Types in F#
-#### Products
-    // Tuples
-    let myTuple : (int * string * bool) = (42, "The answer", true)
+{% highlight fsharp %}
+// Records
+type Person = 
+    {
+        Name : string
+        Email : string
+        Age : int
+    }
 
-*******************************************************************************
-### Types in F#
-#### Products
-    // Records
-    type Person = 
-        {
-            Name : string
-            Email : string
-            Age : int
-        }
-    
-    // Record construction.
-    let gabor = {Name = "Gabor"; Email = "gabor@foobar.com"; Age = 45}
+// Record construction.
+let gabor = {Name = "Gabor"; Email = "gabor@foobar.com"; Age = 45}
 
-    // Access properties.
-    let gaborEmail = gabor.Email
+// Access properties.
+let gaborEmail = gabor.Email
 
-    // Record modification.
-    let olderGabor = {gabor with Age = 46}
+// Record modification.
+let olderGabor = {gabor with Age = 46}
+{% endhighlight %}
 
 
-*******************************************************************************
-### Types
 #### Sum types (Co-products)
-
-    type Dice = | One | Two | Three | Four | Five | Six
+{% highlight fsharp %}
+type Dice = | One | Two | Three | Four | Five | Six
     
-    let randomDice = Five
+let randomDice = Five
+{% endhighlight %}
 
 
-*******************************************************************************
-### Types
-#### Sum types (Co-products)
+{% highlight fsharp %}
 
-    /// Union type with arguments.
-    type Contact =
-        | Email of string
-        | Phone of string
-        | Address of Address
-    
-    let contact = Email "gabor@foobar.com"
+/// Union type with arguments.
+type Contact =
+    | Email of string
+    | Phone of string
+    | Address of Address
 
-*******************************************************************************
-### Types
-#### Sum types (Co-products)
+let contact = Email "gabor@foobar.com"
+{% endhighlight %}
 
-    // Parameterized
-    type Option<'T> =
-        | Some of 'T
-        | None
+{% highlight fsharp %}
 
-    let someInt : Option<int> = Some 42
+// Parameterized
+type Option<'T> =
+    | Some of 'T
+    | None
 
-    let nothing : Option<string> = None
+let someInt : Option<int> = Some 42
 
+let nothing : Option<string> = None
+{% endhighlight %}
 
-*******************************************************************************
-### Types
-#### Product types in category theory
+Product types in category theory
 	
-![Category](images/product.png)
-
-
-*******************************************************************************
-
-### Pattern matching
-   
-    type Address = {Street : string; Number : int; Zip : string}
-
-    type Contact =
-        | Email of string
-        | Phone of string
-        | Address of Address
-    
-    let printContact (contact: Contact) =
-        match contact with
-        | Email e    -> printfn "Email: %e" s
-        | Phone f    -> printfn "Phone: %s" f
-        | Address ad -> printfn "Adress: %s %A %s" ad.Street ad.Number ad.Zip
-
-
-*******************************************************************************
-### Recursive data structures
-#### Example - representing boolean expressions
-
-    type Exp =
-        | True
-        | False
-        | Not of Exp
-        | And of Exp * Exp
-        | Or of Exp * Exp
-
-    let example = And (Not (Or (False,True)), True)
-
-
-*******************************************************************************
-### Recursive data structures
-#### Example - representing boolean expressions
-    type Exp =
-        | True
-        | False
-        | Not of Exp
-        | And of Exp * Exp
-        | Or of Exp * Exp
-
-    let rec eval exp =
-        match exp with
-        | True          -> true
-        | False         -> false
-        | Not e         -> not (eval e)
-        | And (e1,e2)   -> (eval e1) && (eval e2)
-        | Or (e1,e2)    -> (eval e1) || (eval e2)
-
-
-*******************************************************************************
-### Recursive data structures
-#### Representing natural numbers
-    type Nat =
-        | Zero
-        | Succ of Nat
-
-    let rec add n m =
-        match n, m with
-        | Zero, m       -> m
-        | n, Zero       -> n
-        | Succ n', _    -> Succ(add n' m)
-
-    let (<+>) = add
-
-    let one = Succ Zero
-    let two = one <+> one
-    let three = one <+> two
-    let five = two <+> three
-
-    // Exercise
-    let toInt (n: Nat) : int = ??
-
-
-*******************************************************************************
-### Recursive data structures
-#### Lists
-    type List<'T> =
-        | Nil
-        | Cons of ('T * List<'T>)
-    
-    [] = Nil
-    (::) x xs = Cons(x,xs)
-    [a,b,c,d] = a :: b :: c :: d :: []
-
-
-*******************************************************************************
-### Lists
-#### Constructing lists
-    let primes = [1; 2; 3; 5; 7; 11; 13]
-
-    let persons = [
-        {Name = "Gabor"; Email = "gabor@foobar.com"; Age = 59}
-        {Name = "Sally"; Email = "sally@foobar.com"; Age = 25}
-        {Name = "Attila"; Email = "attila@foobar.com"; Age = 31}
-    ]
-
-*******************************************************************************
-### Lists
-#### Pattern matching
-
-    let isEmpty xs =
-        match xs with
-        | []        -> true
-        | _         -> false
-
-    let rec containsGabor (ps: list<Person>) : bool =
-        match ps with
-        | []        -> false
-        | p :: ps   -> p.Name = "Gabor" || containsGabor ps
-
-*******************************************************************************
-### Lists
-#### Aggregating elements
-
-    let rec sum (xs: list<int>) : int = ??
-
-*******************************************************************************
-### Lists
-### Aggregating elements
-
-    let rec sum (xs: list<int>) : int =
-        match xs with
-        | []        -> 0
-        | x :: xs   -> x + sum xs
-
-*******************************************************************************
-### Lists
-#### Aggregating elements
-    let rec concatenate (xs: list<string>) : string =
-        match xs with
-        | []        -> ""
-        | x :: xs   -> x  +  concatenate xs
-
-*******************************************************************************
-### Lists
-#### Aggregating elements
-
-    let rec allLengthThree (ss: list<string>) : bool = ??
-
-*******************************************************************************
-### Lists
-#### Aggregating elements
-
-    let rec allLengthThree (ss: list<string>) : bool =
-        match ss with
-        | []        -> true
-        | s :: ss   -> s.Length = 3 && allLengthThree ss
-
-
-*******************************************************************************
-### Lists
-#### Aggregating elements
-
-    let rec foldRight (f: 'T -> 'S -> 'S) (z: 'S) (xs: list<'T>) : 'S =
-        match xs with
-        | []        -> z
-        | x :: xs   -> f x (foldRight f z xs)
-
-    let sum = foldLeft (+) 0
-
-    let concatenate = foldLeft (+) ""
-
-    let rec allLengthThree (ss: list<string>) : bool = ??
-
-
-*******************************************************************************
-### Lists
-#### Mapping elements
-
-    let rec allNames (ps : list<Person>) : list<Person> =
-        match ps with
-        | []        -> []
-        | p :: ps   -> p.Name :: allNames ps
-
-*******************************************************************************
-### Lists
-#### Mapping elements
-
-    let rec squareAll (xs : list<int>) : list<int> =
-        match xs with
-        | []        -> []
-        | x :: xs   -> x * x :: squareAll xs
-
-    let rec allLengths (ss: list<string>) : list<int> =
-        match ss with
-        | []        -> []
-        | s :: ss   -> s.Length :: allLengths ss    
-
-*******************************************************************************
-### Lists
-#### Mapping elements
-
-    let rec map (f: 'T -> 'S) (xs : list<'T>) : list<'S> = ??
-
-
-*******************************************************************************
-### Lists
-#### Mapping elements
-
-    let rec map (f: 'T -> 'S) (xs : list<'T>) : list<'S> =
-        match xs with
-        | []        -> []
-        | x :: xs   -> f x :: map f xs
-
-    let allNames = map (fun p -> p.Name)
-
-    let squareAll = map (fun x -> x * x)
-
-    let allLengths = map (fun s -> s.Length)
-
-*******************************************************************************
-### Lists
-#### Mapping elements
-
-    let rec map (f: 'T -> 'S) (xs : list<'T>) : list<'S> = 
-        foldRight (fun x xs -> f x :: xs) [] xs
-
-*******************************************************************************
-### Lists
-#### Filtering elements
-
-    let allExceptGabor : list<Person> -> list<Person> = 
-        filter (fun p -> p.Name <> "Gabor")
-
-*******************************************************************************
-### Lists
-#### Filtering elements
-
-    let allExceptGabor : list<Person> -> list<Person> = 
-        filter (fun p -> p.Name <> "Gabor")
-
-    let filter (pred: 'T -> bool) (xs: list<'T>) : list<'T> = ??
-
-
-*******************************************************************************
-### Lists
-#### Filtering elements
-
-    let filter (pred: 'T -> bool) (xs: list<'T>) : list<'T> = 
-        foldRight (fun x xs -> if pred x then x :: xs else xs) [] xs
-
-
-*******************************************************************************
-### Lists
-#### Collecting elements
-
-    let allChars = flatMap (List.ofSeq) ["abc"; "def"]
-
-    allChars ["abc"; "de" ; "f"] = ['a'; 'b'; 'c'; 'd'; 'e'; 'f']
-
-
-*******************************************************************************
-### Lists
-####  Collecting elements
-
-    let flatMap f xs = foldRight (fun x xs -> f x @ xs) [] xs
-    
-
-
-*******************************************************************************
-### Lists
-#### Composing functions over lists
-
-    type Person = 
-        { 
-            Name : string
-            Email : string
-            Age : int 
-        }
-
-    let persons = 
-        [
-            {Name = "Gabor"; Email = "gabor@foobar.com"; Age = 59}
-            {Name = "Sally"; Email = "sally@foobar.com"; Age = 25}
-            {Name = "Attila"; Email = "attila@foobar.com"; Age = 31}
-        ]
-
-    let sumOfAllAgesOfPersonsNotNamedGabor =
-        List.filter (fun p -> p.Name <> "Gabor")
-        >> List.map (fun p -> p.Age)
-        >> List.fold (+) 0
+![Category](img/product.png)
+
+## Pattern matching
+{% highlight fsharp %}   
+type Address = {Street : string; Number : int; Zip : string}
+
+type Contact =
+    | Email of string
+    | Phone of string
+    | Address of Address
+
+let printContact (contact: Contact) =
+    match contact with
+    | Email e    -> printfn "Email: %e" s
+    | Phone f    -> printfn "Phone: %s" f
+    | Address ad -> printfn "Adress: %s %A %s" ad.Street ad.Number ad.Zip
+
+{% endhighlight %}
+
+## Recursive data structures
+Example - representing boolean expressions
+{% highlight fsharp %}
+type Exp =
+    | True
+    | False
+    | Not of Exp
+    | And of Exp * Exp
+    | Or of Exp * Exp
+
+let example = And (Not (Or (False,True)), True)
+{% endhighlight %}
+{% highlight fsharp %}
+
+let rec eval exp =
+    match exp with
+    | True          -> true
+    | False         -> false
+    | Not e         -> not (eval e)
+    | And (e1,e2)   -> (eval e1) && (eval e2)
+    | Or (e1,e2)    -> (eval e1) || (eval e2)
+{% endhighlight %}
+
+
+Example - Representing natural numbers using sum types:
+{% highlight fsharp %}
+type Nat =
+    | Zero
+    | Succ of Nat
+
+let rec add n m =
+    match n, m with
+    | Zero, m       -> m
+    | n, Zero       -> n
+    | Succ n', _    -> Succ(add n' m)
+
+let (<+>) = add
+
+let one = Succ Zero
+let two = one <+> one
+let three = one <+> two
+let five = two <+> three
+
+// Exercise
+let toInt (n: Nat) : int = ??
+{% endhighlight %}
+
+Representing lists:
+{% highlight fsharp %}
+type List<'T> =
+    | Nil
+    | Cons of ('T * List<'T>)
+
+[] = Nil
+(::) x xs = Cons(x,xs)
+[a,b,c,d] = a :: b :: c :: d :: []
+{% endhighlight %}
+
+Constructing lists
+{% highlight fsharp %}
+let primes = [1; 2; 3; 5; 7; 11; 13]
+
+let persons = [
+    {Name = "Gabor"; Email = "gabor@foobar.com"; Age = 59}
+    {Name = "Sally"; Email = "sally@foobar.com"; Age = 25}
+    {Name = "Attila"; Email = "attila@foobar.com"; Age = 31}
+]
+{% endhighlight %}
+
+Pattern matching lists:
+{% highlight fsharp %}
+
+let isEmpty xs =
+    match xs with
+    | []        -> true
+    | _         -> false
+
+let rec containsGabor (ps: list<Person>) : bool =
+    match ps with
+    | []        -> false
+    | p :: ps   -> p.Name = "Gabor" || containsGabor ps
+{% endhighlight %}
 
   
-*******************************************************************************
-### Summary
+## Exercises
 
-1. Functional programming orginiates from $$\lambda calculus$$.
+#### Natural numbers
+Given the definition of `Nat` for representing natural numbers,
+define two functions `toNat` and `fromNat` that proves that positive
+integers are isomorphic `Nat`.
 
-2. Functions and function composition - Data types and functions form a Category!
+{% highlight fsharp %}
+let fromNat (n: Nat) : int = ??
+let toNat (n: int) : Nat = ??
+{% endhighlight %} 
 
-3. Defining custom types (Products and Co-products).
+Also who that for any positive integer `n` the following hold:
 
-4. Functions over lists - `fold`, `map`, `filter` and `flatMap`.
+{% highlight fsharp %}
+(toNat >> fromNat) n = n
+{% endhighlight %}
+
+and
+
+{% highlight fsharp %}
+(fromNat >> toNat) = id
+{% endhighlight %}
+
+
+#### Boolean expression
+Extend the definition of boolean expression to also include variables
+with a name. Modify the eval function to accept an extra argument for
+looking up the value of a variable:
+
+{% highlight fsharp %}
+let eval (env: String -> bool) (exp: Exp) : bool = ??
+
+{% endhighlight %}
+
 
 
