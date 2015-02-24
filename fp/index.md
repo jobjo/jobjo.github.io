@@ -13,7 +13,7 @@ show that functions and data types form a Category, using F# to exemplify.
 Finally we introduced two ways of constructing types, *Products* and *Co-products*, and their
 categorical description.
 
-Here are the note based on the slides. The last section contains a few exercises.
+Here are the notes based on the slides. The last section contains a few exercises.
 
 ## Introduction
 
