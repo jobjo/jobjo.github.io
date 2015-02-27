@@ -3,7 +3,14 @@ layout: page
 title: Design patterns for functional programming
 ---
 
-# Session 1 - The Category Pattern
+# Modules
+
+* [The Category Pattern](#module1)
+* [The Functor Pattern](#module2)
+
+
+# The Category Pattern
+
 
 In this session we introduced functional programming and its foundation in mathematics.
 We showed that functional programming is based on $$\lambda$$-calculus and also presented
@@ -14,6 +21,7 @@ Finally we introduced two ways of constructing types, *Products* and *Co-product
 categorical description.
 
 Here are the notes based on the slides. The last section contains a few exercises.
+
 
 ## Introduction
 
@@ -452,7 +460,6 @@ and
 (fromNat >> toNat) = id
 {% endhighlight %}
 
-
 #### Boolean expression
 Extend the definition of boolean expression to also include variables
 with a name. Modify the eval function to accept an extra argument for
@@ -462,6 +469,406 @@ looking up the value of a variable:
 let eval (env: String -> bool) (exp: Exp) : bool = ??
 
 {% endhighlight %}
+
+
+# <a name="module2"></a> The Functor Pattern
+
+In category theory a *functor* is a mapping between two categories. 
+They also arise naturally in programming as parameterized types (often containers) such
+as lists, options and trees. 
+
+They powerful framework for deciding when it's safe to refactor code and are also the foundation
+for more complex patterns such as *applicative functors* and *monads*.
+
+In this session we were looking closer at common functions operating on lists, introduced the functor pattern
+and gave an example of using the functor pattern when designing a library for image manipulation.
+
+#### Aggregating elements
+
+{% highlight fsharp %}
+let rec concatenate (xs: list<string>) : string =
+    match xs with
+    | []        -> ""
+    | x :: xs   -> x  +  concatenate xs
+{% endhighlight %}
+
+#### Aggregating elements
+
+
+{% highlight fsharp %}
+
+let rec allLengthThree (ss: list<string>) : bool = ??
+
+{% endhighlight %}
+
+
+{% highlight fsharp %}
+let rec allLengthThree (ss: list<string>) : bool =
+    match ss with
+    | []        -> true
+    | s :: ss   -> s.Length = 3 && allLengthThree ss
+{% endhighlight %}
+
+{% highlight fsharp %}
+
+let rec foldRight (f: 'T -> 'S -> 'S) (z: 'S) (xs: list<'T>) : 'S =
+    match xs with
+    | []        -> z
+    | x :: xs   -> f x (foldRight f z xs)
+
+let sum = foldRight (+) 0
+
+let concatenate = foldRight (+) ""
+
+let rec allLengthThree (ss: list<string>) : bool = ??
+
+{% endhighlight %}
+
+{% highlight fsharp %}
+
+let sum = foldRight (+) 0
+
+sum [1;2;3]                                 =
+foldRight (+) 0 [1;2;3]                     =
+(+) 1 (foldRight (+) 0 [2,3]                =
+1 + (foldRight (+) 0 [2,3]                  =
+1 + (2 + (foldRight (+) 0 [3])              =
+1 + (2 + (3 + foldRight (+) 0 [])           =
+1 + (2 + ( 3 + 0))
+
+{% endhighlight %}
+
+#### Mapping elements
+
+{% highlight fsharp %}
+
+let rec allNames (ps : list<Person>) : list<string> =
+    match ps with
+    | []        -> []
+    | p :: ps   -> p.Name :: allNames ps
+{% endhighlight %}
+
+
+{% highlight fsharp %}
+
+let rec squareAll (xs : list<int>) : list<int> =
+    match xs with
+    | []        -> []
+    | x :: xs   -> x * x :: squareAll xs
+
+let rec allLengths (ss: list<string>) : list<int> =
+    match ss with
+    | []        -> []
+    | s :: ss   -> s.Length :: allLengths ss    
+
+{% endhighlight %}
+
+
+{% highlight fsharp %}
+
+let rec map (f: 'T -> 'S) (xs : list<'T>) : list<'S> =
+    match xs with
+    | []        -> []
+    | x :: xs   -> f x :: map f xs
+
+let allNames = map (fun p -> p.Name)
+
+let squareAll = map (fun x -> x * x)
+
+let allLengths = map (fun s -> s.Length)
+
+{% endhighlight %}
+
+{% highlight fsharp %}
+
+let rec map (f: 'T -> 'S) (xs : list<'T>) : list<'S> =
+    match xs with
+    | []        -> []
+    | x :: xs   -> f x :: map f xs
+
+map length [s1; s2; s3] =
+length s1 :: (map length [s2; s3])                        =
+length s1 :: (length s2 :: (map length [s3]))             =
+length s1 :: (length s2 :: (length s3 :: (map lenght [])) =
+length s1 :: (length s2 :: (length s3 :: []))             =
+[length s1; length s2; length s3]
+
+{% endhighlight %}
+
+{% highlight fsharp %}
+
+let rec map (f: 'T -> 'S) (xs : list<'T>) : list<'S> = 
+    foldRight (fun x xs -> f x :: xs) [] xs
+{% endhighlight %}
+
+#### Filtering elements
+
+{% highlight fsharp %}
+let allExceptGabor : list<Person> -> list<Person> = 
+    filter (fun p -> p.Name <> "Gabor")
+{% endhighlight %}
+
+
+{% highlight fsharp %}
+
+let filter (pred: 'T -> bool) (xs: list<'T>) : list<'T> = 
+    foldRight (fun x xs -> if pred x then x :: xs else xs) [] xs
+{% endhighlight %}
+
+
+{% highlight fsharp %}
+let allChars = flatMap (List.ofSeq) ["abc"; "def"]
+
+allChars ["abc"; "de" ; "f"] = ['a'; 'b'; 'c'; 'd'; 'e'; 'f']
+{% endhighlight %}
+
+####  Collecting elements
+
+{% highlight fsharp %}
+let flatMap f xs = foldRight (fun x xs -> f x @ xs) [] xs
+{% endhighlight %}
+
+#### Composing functions over lists
+
+{% highlight fsharp %}
+
+type Person = 
+    { 
+        Name : string
+        Email : string
+        Age : int 
+    }
+
+let persons = 
+    [
+        {Name = "Gabor"; Email = "gabor@foobar.com"; Age = 59}
+        {Name = "Sally"; Email = "sally@foobar.com"; Age = 25}
+        {Name = "Attila"; Email = "attila@foobar.com"; Age = 31}
+    ]
+
+let sumOfAllAgesOfPersonsNotNamedGabor =
+    List.filter (fun p -> p.Name <> "Gabor")
+    >> List.map (fun p -> p.Age)
+    >> List.fold (+) 0
+
+{% endhighlight %}
+
+#### Mapping over option types
+
+{% highlight fsharp %}
+
+// Parameterized
+type Option<'T> =
+    | Some of 'T
+    | None
+{% endhighlight %}
+
+{% highlight fsharp %}
+let trimOptionString (os: option<string>) =
+  match os with
+  | Some s  -> Some (s.Trim())
+  | None    -> None
+{% endhighlight %}
+
+{% highlight fsharp %}
+let lengthOptionString (os: option<string>) =
+  match os with
+  | Some s    -> Some (length s)
+  | None      -> None
+{% endhighlight %}
+
+
+### Functors
+
+#### Option as a functor
+
+* `Some` maps objects to objects
+* `map` maps arrows to arrows
+* `(map f >> map g) ?= map (f >> g)`
+
+
+{% highlight fsharp %}
+
+(map f >> map g) None     =
+// Definition of (>>)
+map g (map f None)        =
+// Definition of map
+map g None                =
+// Defintion of map
+None 
+
+map (f >> g) None         =
+// Definition of map
+None
+
+{% endhighlight %}
+
+
+{% highlight fsharp %}
+
+(map f >> map g) (Some x) =
+// Definition of (>>)
+map g (map f (Some x))    =
+// Definition of map 
+map g (Some (f x))        =
+// Definition of map
+Some (g (f x))
+
+map (f >> g) (Some x)     =
+// Definition of map
+Some ((f >> g) x) 
+// Definition of (>>)     
+Some (g (f x))            = 
+
+
+{% endhighlight %}
+
+#### List as a functor
+
+* `[]` maps objects to objects
+* `map` maps arrows to arrows
+* `(map f >> map g) ?= map (f >> g)`
+
+### Example
+
+How to represent *bitmap-like* images?
+
+{% highlight fsharp %}
+let image = fromURL url
+{% endhighlight %}
+
+![Category](img/image.png)
+
+
+{% highlight fsharp %}
+let image = fromURL url |> transpose
+{% endhighlight %}
+
+![Category](img/image-transpose.png)
+
+{% highlight fsharp %}
+let image = 
+  fromURL url
+  |> moveX 50
+  |> moveY -20
+{% endhighlight %}
+
+![Category](img/image-move.png)
+
+{% highlight fsharp %}
+let image = fromURL url |> flipVertical
+{% endhighlight %}
+
+
+{% highlight fsharp %}
+/// Representing an image.
+type Image<'T> = 
+    {
+        Width : int
+        Height : int
+        GetPixel : int -> int -> Option<'T>
+    }
+
+/// Transform the height of an image.
+let setHeight h img = {img with Height = h}
+
+/// Transforms the width of an image.
+let setWidth w img = {img with Width = w} 
+
+/// Transforms the pixels of an image.
+let setGetPixel p img = {img with GetPixel = p}
+
+{% endhighlight %}
+ 
+{% highlight fsharp %}
+let image = fromURL url |> transpose
+{% endhighlight %}
+![Category](img/image-transpose.png)
+
+
+{% highlight fsharp %}
+/// Transposes an image by turning each column into a row.
+let transpose img =
+    img
+    |> setHeight img.Width
+    |> setWidth img.Height
+    |> setGetPixel (fun x y -> img.GetPixel y x)
+
+/// Flip horizontal
+let flipHorizontal img =
+    img |> setGetPixel (fun x y -> img.GetPixel (img.Width - x) y 
+
+{% endhighlight %}
+
+
+{% highlight fsharp %}
+/// Flips an image vertically.
+let flipVertical<'T> : Image<'T> -> Image<'T> = 
+    transpose >> flipHorizontal >> transpose
+
+/// Shifts an image horizontally.
+let moveX l img =
+    img |> setGetPixel (fun x y -> img.GetPixel (x - l) y)
+    
+/// Shifts an image vertically.
+let moveY l = transpose >> moveX l >> transpose
+
+let crop x y w h =
+    moveX (-x) >> moveY (-y) >> setWidth w >> setHeight h
+
+{% endhighlight %}
+
+#### Image as a Functor
+
+{% highlight fsharp %}
+/// Maps each pixel of an image.
+let map (f: 'T -> 'U) (img: Image<'T>) : Image<'U> =
+    {
+        Width = img.Width
+        Height = img.Height
+        GetPixel = fun x y -> Option.map f (img.GetPixel x y)
+    }
+{% endhighlight %}
+  
+
+{% highlight fsharp %}
+let image = 
+    B.fromURL (url)
+    |> map C.toBlackWhite
+    |> map not
+    |> map C.fromBlackWhite
+
+{% endhighlight %}
+![Category](img/image-invert.png)
+
+
+{% highlight fsharp %}
+let image = 
+    B.fromURL (url)
+    |> map (C.toBlackWhite >> not >> C.fromBlackWhite)
+{% endhighlight %}
+
+#### Summary
+
+* List functions - `fold`, `map`, `filter` and `flatMap`
+* Functors - Mapping between Categories
+* Examples of functors - `List` and `Option`
+
+
+
+
+  
+
+  
+
+
+
+
+
+
+
+
+
 
 
 
