@@ -2,7 +2,17 @@
 layout: post
 title: Designing a library for printing recursive data structures
 ---
-I have more than once found myself in need of a function for pretty-printing values of some recursive data structure; Be it a *prefix search tree*, an *abstract syntax tree* for a *domain specific language*, XML or something else. Getting tired of having to implement the same type of logic over and again I decided to generalize the pattern. In the following sections I discuss the design of a tiny library for addressing this problem. It's not a particularly challenging task but provides a good opportunity to touch on a few different concepts in functional programming. Examples include *deep* and *shallow embeddings*, [monoids] and *equational reasoning*. The implementation is given in F#.
+
+I have more than once found myself in need of a function for pretty-printing
+some recursive data type; Be it a *prefix search tree*, an
+*abstract syntax tree* for a *domain specific language*, XML or something else.
+Getting tired of having to implement the same type of logic over and again I
+decided to generalize the pattern. In the following sections I discuss the
+design of a tiny library for addressing this problem. It's not a particularly
+challenging task but provides a good opportunity to touch on a few different
+concepts in functional programming. Examples include *deep* and *shallow
+embeddings*, [monoids] and *equational reasoning*. The implementation is given
+in F#.
 
 ## The Problem
 To give a motivating example, consider a (simplistic) type for representing XML data:
@@ -17,33 +27,43 @@ type XML =
     | Node of string * list<Attribute> * list<XML>
 {% endhighlight %}
 
-An `Attribute` is key-value pair and an `XML` node is either some text or an element with attributes and a list of children.
+An `Attribute` is a key-value pair and an `XML` node is either some text or an
+element with attributes and a list of children.
 
-Given a value of this type, how can we render it as a nested set of blocks with proper indentation levels?
+In order to render xml as a set of nested blocks with proper indentation
+levels, we wish to design a general purpose *printing library*.
 
 ## Deriving the API
-In order to design a generalized API we need some kind of abstraction so let's start by giving it a name; I call it `Printer`.  At the bare minimum we also need a function for evaluating a printer by turning it into a string:
+As a first task we need to decide on a name for the thing we're trying to
+abstract; I call it `Printer`.  At the bare minimum we also need a function for
+evaluating a printer by turning it into a string:
 
 {% highlight fsharp %}
 /// Executes a printer, producing a string value.
 val run : Printer -> string
 {% endhighlight %}
 
-Let's think about how to produce printers. We should naturally provide a function for lifting simple string values into printers:
+Let's think about how to produce printers. We should naturally provide a
+function for lifting simple string values:
 
 {% highlight fsharp %}
 /// Produces a printer that prints a string.
 val print : string -> Printer
 {% endhighlight %}
 
-The interesting part is the ability to achieve nesting or indentation. The most intuitive way to express this is via a function that operates on a printer by indenting it one level:
+The interesting part is the ability to achieve nesting or indentation. The most
+intuitive way to express this is via a function that operates on a printer by
+indenting it one level:
 
 {% highlight fsharp %}
 // Indents a printer one level.
 val indent : Printer -> Printer
 {% endhighlight %}
 
-Finally we need some means for composing printers; One way to achieve compositionality is to require that our printer type forms a [monoid] by introducing an empty printer along with a binary operator for combining two printers:
+Finally we need some means for composing printers; One way to achieve
+compositionality is to require that our printer type forms a [monoid] by
+introducing an empty printer along with a binary operator for combining two
+printers:
 
 {% highlight fsharp %}
 /// Doesn't print anything.
@@ -117,9 +137,16 @@ To ensure that the semantics is intuitive, there are a number of constraints tha
 4. `forall p1,p2,p3: add p1 (add p2 p3) = add (add p1 p2) p3`
 5. `forall p1,p2,p3: indent (add p1 p2) = add (indent p1) (indent p2)`
 
-(1) states that `run` is the inverse of `print`, i.e. printing a string and then running it gives back the same string. (2) and (3) means that `empty` must be *left* and *right identity* for `add` which is required for `Printer` to form a [monoid]. (4) is also part of the [monoid] constraints and implies that `add` is associative. (5) states that `indent` is [distributivee](http://en.wikipedia.org/wiki/Distributive_property) over `add`; This is needed for safely being able to refactor expressions.
-
-Guaranteeing (2), (3) and (4) is necessary in order to provide intuitive semantics for `sequence`, for instance by ensuring that the following two printers are identical:
+(1) states that `run` is the inverse of `print`, i.e. printing a string and
+then running it gives back the same string. (2) and (3) means that `empty` must
+be *left* and *right identity* for `add` which is required for `Printer` to
+form a [monoid]. (4) is also part of the [monoid] constraints and implies that
+`add` is associative. (5) states that `indent` is
+[distributive](http://en.wikipedia.org/wiki/Distributive_property) over `add`;
+This is needed for safely being able to refactor expressions.  Guaranteeing
+(2), (3) and (4) is necessary in order to provide intuitive semantics for
+`sequence`, for instance by ensuring that the following two printers are
+identical:
 
 {% highlight fsharp %}
 let pc1 = sequence [ p1; p2; p3 ]
@@ -129,19 +156,38 @@ let pc2 = sequence [p1 ; sequence [p2; p3]]
 This is exactly why the [monoid] pattern is useful.
 
 ## A shallow embedding
-To complete the library we now need to find a definition of the type `Printer`that allows for a feasible implementations of the required functions.
+To complete the library we now need to find a definition of the type `Printer`
+that allows for a feasible implementations of the required functions.
 
-Thinking of the API as a small *Embedded Domain Specific Language* (EDSL), there are broadly speaking two implementation strategies available - *Deep* and *shallow* embeddings. Deep embeddings preserve the expression structure of the operations; This generally enables more optimization capabilities and also makes it possible to provide multiple *interpreters*. In a shallow embedding no intermediate data structure is used for building up expression trees, instead the semantics of an operation is part of its definition. 
+Thinking of the API as a small Embedded Domain Specific Language (EDSL),
+there are broadly speaking two implementation strategies available - *Deep* and
+*shallow* embeddings. Deep embeddings preserve the expression structure of the
+operations; This generally enables more optimization capabilities and also
+makes it possible to provide multiple *interpreters*. In a shallow embedding no
+intermediate data structure is used for building up expression trees, instead
+the semantics of an operation is part of its definition. 
 
-Let's start by the simplest possible solution, not worrying about whether to support multiple interpreters or not. Applying the principal of [Denotational Design](http://conal.net/papers/type-class-morphisms/type-class-morphisms-long.pdf), we need to precisely define what it *means* to be a `Printer`. A printer is something that has the ability to output a nested structure. Parameterizing over the choice of how to print a line given an indentation level, this can be represented by the following function:
+Let's start by the simplest possible solution, not worrying about whether to
+support multiple interpreters or not. Applying the principal of [Denotational
+Design](http://conal.net/papers/type-class-morphisms/type-class-morphisms-long.pdf),
+we need to precisely define what it *means* to be a `Printer`. A printer is
+something that has the ability to output a nested structure. Parameterizing
+over the choice of how to print a line given an indentation level, this can be
+represented by the following function:
 
 {% highlight fsharp %}
     type Printer = (int -> string -> string) -> string
 {% endhighlight %}
 
-In other words a printer is a *black-box* that when applied to a function from an indentation level and a string to string, returns a pretty-printed structure. All the information of what to output is contained within the closure of the function. The fact that it's opaque, i.e. that it is not possible to peek inside a printer to find out how it was constructed, places it in the category of *shallow embeddings*.
+In other words a printer is a *black-box* that when applied to a function from
+an indentation level and a string to string, returns a pretty-printed
+structure. All the information of what to output is contained within the
+closure of the function. The fact that it's opaque, i.e. that it is not
+possible to peek inside a printer to find out how it was constructed, places it
+in the category of *shallow embeddings*.
 
-Let's see if the type is sufficient for implementing the interface. Starting with `run`:
+Let's see if the type is sufficient for implementing the interface. Starting
+with `run`:
 
 {% highlight fsharp %}
 let run (p: Printer) =
@@ -150,7 +196,8 @@ let run (p: Printer) =
         sprintf "%s%s\n" space s
 {% endhighlight %}
 
-`Run` simply invokes the printer with a function that indents each line with two spaces per indentation level.
+`Run` simply invokes the printer with a function that indents each line with
+two spaces per indentation level.
 
 Lifting a string into a printer is also straight forward:
 
@@ -158,15 +205,18 @@ Lifting a string into a printer is also straight forward:
 let print s = fun ind -> ind 0 s
 {% endhighlight %}
 
-The function turns a string into a printer that invokes the indentation argument with level 0.
+The function turns a string into a printer that invokes the indentation
+argument with level 0.
 
-To implement `indent` we need to transform a printer into a new one that when executed invokes its given indent function with a greater indentation level:
+To implement `indent` we need to transform a printer into a new one that when
+executed invokes its given indent function with a greater indentation level:
 
 {% highlight fsharp %}
 let indent p = fun ind -> p (fun n -> ind (n + 1))
 {% endhighlight %}
 
-When it comes to `empty` we're left with little choice but to output an empty string:
+When it comes to `empty` we're left with little choice but to output an empty
+string:
 
 {% highlight fsharp %}
 let empty = fun _ -> ""
@@ -177,9 +227,11 @@ Last one is `add`:
 {% highlight fsharp %}
 let add p1 p2 = fun ind -> p1 ind + p2 ind
 {% endhighlight %}
+
 Which simply runs both printers and concatenates their output.
 
-We further need to ensure that the implementation is compatible with the constraints regarding the semantics. 
+We further need to ensure that the implementation is compatible with the
+semantical constraints. 
 
 First,  `(print >> run)` must be equivalent with the identity function:
 
@@ -197,7 +249,8 @@ sprintf "%s%s" (space 0) s)                                         =
 s
 {% endhighlight %}
 
-What about the [monoid] constraints for `add` and `empty`? Here is a proof for left identity (2):
+What about the [monoid] constraints for `add` and `empty`? Here is a proof for
+left identity (2):
 
 {% highlight fsharp %}
 add p empty =
@@ -211,7 +264,10 @@ fun ind -> p ind + ""                                               =
 fun ind -> p ind                                                    =
 p
 {% endhighlight %}
-In fact, these properties follow from the [monoid] properties of *string*. The proof in the other direction is symmetric. We also need to show that `add` is associative:
+
+In fact, these properties follow from the [monoid] properties of *string*. The
+proof in the other direction is symmetric. We also need to show that `add` is
+associative:
 
 {% highlight fsharp %}
 add p1 (add p2 p3)                                                  =
@@ -227,9 +283,11 @@ fun ind -> (p1 ind + p2 ind) + p3 ind                               =
 add (add p1 p2) p3
 {% endhighlight %}
 
-Again, the proof relies on the associativity of string concatenation.
 
-Finally we need to show that `indent` is distributive according to (5). This  follows directly from the definitions of the two functions:
+Again, the proof relies on the associativity of string concatenation.  
+
+Finally we need to show that `indent` is distributive according to (5). This
+follows directly from the definitions of the two functions:
 
 {% highlight fsharp %}
 indent (add p1 p2)                                                  =
@@ -243,7 +301,10 @@ fun ind -> (p1 (fun n -> ind (n + 1)) + p2 (fun n -> ind (n + 1)))  =
 add (indent p1) (indent p2)
 {% endhighlight %}
 
-To wrap it up, below is the complete listing of the implementation. I made the definition of `Printer` private, added a function for running printers with a custom indentation parameter and included operator aliases for `sequence` `print`, and `add`:
+To wrap it up, below is the complete listing of the implementation. I made the
+definition of `Printer` private, added a function for running printers with a
+custom indentation parameter and included operator aliases for `sequence`
+`print`, and `add`:
 
 {% highlight fsharp %}
 open System
@@ -277,7 +338,7 @@ let add tp1 tp2 = mkPrinter <| fun ind ->
      tp1.Run ind + tp2.Run ind
 
 /// Concatenates a sequence of printers.
-let sequence ps = Seq.fold add empty ps
+let sequence = Seq.fold add empty 
 
 /// Short for sequence.
 let (!<) = sequence
@@ -289,7 +350,8 @@ let (<+>) = add
 let (!) = print
 {% endhighlight %}
 
-Returning to the motivational example of printing XML, here is a complete implementation of a show function for the `XML` type:
+Returning to the motivational example of printing XML, here is a complete
+implementation of a show function for the `XML` type:
 
 {% highlight fsharp %}
 /// Attribute
@@ -318,10 +380,17 @@ let show =
     show >> run
 {% endhighlight %}
 
-Hopefully the example is straight forward to follow. In case you don't like the prefix operators, you could change the definition to use `sequence` instead of `!<`, `print` instead of `!`.
+Hopefully the example is straight forward to follow. In case you don't like the
+prefix operators, you could change the definition to use `sequence` instead of
+`!<`, `print` instead of `!`.
 
 ## A deep embedding
-A deep embedding must preserve the structure of how a printer is assembled. This is required whenever you need to support multiple back-ends or different ways of interpreting expressions. Creating a data type for a deep embedding is straight forward, we basically just need to list the distinct language constructs. The following type will do:
+
+A deep embedding must preserve the structure of how a printer is assembled.
+This is required whenever you need to support multiple back-ends or different
+ways of interpreting expressions. Creating a data type for a deep embedding is
+straight forward, we basically just need to list the distinct language
+constructs. The following type will do:
 
 {% highlight fsharp %}
 // Deep embedding of printer type.
@@ -332,7 +401,8 @@ type Printer =
     | Add of Printer * Printer
 {% endhighlight %}
 
-In this way, all operations are trivial. Here are the functions mirroring the constructors:
+In this way, all operations are trivial. Here are the functions mirroring the
+constructors:
     
 {% highlight fsharp %}
 // Empty printer.
@@ -352,7 +422,11 @@ let add p1 p2 =
     | _         -> Add(p1,p2)
 {% endhighlight %}
 
-The only interesting part is `add` which contains an optimization step for implementing left and right identity for `empty` in accordance with the specified semantics. All the work of evaluating a printer is pushed to the interpretors, in our case a function for constructing a string. Here are the the equivalent `runWith` and `run` functions:
+The only interesting part is `add` which contains an optimization step for
+implementing left and right identity for `empty` in accordance with the
+specified semantics. All the work of evaluating a printer is pushed to the
+interpretors, in our case a function for constructing a string. Here are the
+equivalent `runWith` and `run` functions:
 
 {% highlight fsharp %}
 // Executes a printer.
@@ -370,15 +444,38 @@ let runWith ind p =
 let run = runWith <| fun n -> sprintf "%s%s\n" (space n)
 {% endhighlight %}
 
-Each language construct is handled separately with `Indent` and `Add` traversing their arguments recursively. A `Text.StringBuilder` object is used to accumulate the output of printed lines in order to improve on efficiency.
+Each language construct is handled separately with `Indent` and `Add`
+traversing their arguments recursively. A `Text.StringBuilder` object is used
+to accumulate the output of printed lines in order to improve on efficiency.
 
-What about the semantics, how do we prove that the definition is compatible with the constraints listed above? What we really need to check is the validity of expressions with respect to a particular interpreter (in this case `run`). For instance looking at constraint (4) concerning associativity of `add`: `(add p1 (add p2 p3) = add (add p1 p2) p3)`, we're not interested in whether these expressions are identical or not; Only that they produce the same output for a given interpreter. However, whenever we are able to show that two expression are in fact identical it naturally follows that all possible interpretations are identical.
+What about the semantics, how do we prove that the definition is compatible
+with the constraints listed above? What we really need to check is the validity
+of expressions with respect to a particular interpreter (in this case `run`).
+For instance looking at constraint (4) concerning associativity of `add`: `(add
 
-Showing that constraints (1) and (4) holds is similar to the example above. For left and right identity (2,3) it's possible to leverage the definition of `add` canceling out `Empty` values, but only in case the type constructors are hidden in order to rule out the construction of values such as `(Add (Print "Hello"), Empty)`. This fact introduces a subtle problem; On the one hand exposing the printer type is necessary for allowing different interpretors to be defined. On the other hand, providing access to the constructors removes the control over how values are constructed. One solution would be to expose the core definitions in a separate module.
+p1 (add p2 p3) = add (add p1 p2) p3)`, we're not interested in whether these
+expressions are identical or not; Only that they produce the same output for a
+given interpreter. However, whenever we are able to show that two expression
+are in fact identical it naturally follows that all possible interpretations
+are identical.
 
-Using equational reasoning is slightly more complicated given the imperative style of the `runWith` function. The complete proofs are left as an exercise. 
+Showing that constraints (1) and (4) holds is similar to the example above. For
+left and right identity (2,3) it's possible to leverage the definition of `add`
+canceling out `Empty` values, but only in case the type constructors are hidden
+in order to rule out the construction of values such as `(Add (Print "Hello"),
+Empty)`. This fact introduces a subtle problem; On the one hand exposing the
+printer type is necessary for allowing different interpretors to be defined. On
+the other hand, providing access to the constructors removes the control over
+how values are constructed. One solution would be to expose the core
+definitions in a separate module.
 
-Another approach is to provide a mapping from the deep to the shallow embedding. Assuming a module `ShallowPrinter` containing the shallow implementation from above, here is a function for performing the translation along with `runWith` function:
+Using equational reasoning is slightly more complicated given the imperative
+style of the `runWith` function. The complete proofs are left as an exercise. 
+
+Another approach is to provide a mapping from the deep to the shallow
+embedding. Assuming a module `ShallowPrinter` containing the shallow
+implementation from above, here is a function for performing the translation
+along with `runWith` function:
 
 {% highlight fsharp %}
 module SP = ShallowPrinter
@@ -397,7 +494,8 @@ let runWith ind = toShallow >> SP.runWith ind
 let run =  runWith <| fun n -> sprintf "%s%s\n" (space n)
 {% endhighlight %}
 
-Now, all proofs concerning the shallow implementation can be safely reused in order to show that the constraints are fulfilled for this definition of run.
+Now, all proofs concerning the shallow implementation can be safely reused in
+order to show that the constraints are fulfilled for this definition of run.
  
 Here is the a complete listing of a stand-alone deep embedding:
 
@@ -462,7 +560,9 @@ let (<+>) = add
 let (!) = print
 {% endhighlight %}
 
-At last, to illustrate that it is possible to define alternative interpretors of printer expressions, consider the following example that given a printer, generates F# code for printing the expression itself:
+At last, to illustrate that it is in fact possible to define alternative interpretors
+of printer expressions, consider the following example that given a printer,
+generates F# code for printing the expression itself:
 
 {% highlight fsharp %}
 let showFSharp : Printer -> string =
@@ -488,7 +588,8 @@ let showFSharp : Printer -> string =
     show >> run
 {% endhighlight %}
 
-Using this function on the initial `htmlPrinter`  example, we actually retrieve and equivalent F# expression recreating the printer:
+Using this function on the initial `htmlPrinter`  example, we actually retrieve
+and equivalent F# expression for recreating the printer:
 
 {% highlight fsharp %}
 // Define a custom printer.
@@ -533,13 +634,20 @@ Add (
   Print "</html>"
 )
 {% endhighlight %}
-Which in fact is valid F#. This would not have been possible using the shallow embedding.
+Which indeed valid F#. This would not have been possible using the shallow embedding.
 
 ## Summary
-In this post I've addressed the problem of designing a library for pretty-printing recursive data structures. The approach taken is general and starts by identifying a minimal set of operations needed and then for each operation define a set of constraints (or *laws*) that any implementation must obey.
-In order support compositionality of printers the [monoid] pattern was used.
 
-Finally, two different realizations of the library was given, one *shallow* and one *deep* embedding. By using equational reasoning we were able to show that the semantical constraints were satisfied.
+In this post I've addressed the problem of designing a library for
+pretty-printing recursive data structures. The approach taken is general and
+starts by identifying a minimal set of required operations needed and then for each
+operation define a set of constraints (or *laws*) that any implementation must
+obey. In order support compositionally of printers the [monoid] pattern was
+used.
+
+Finally, two different realizations of the library was given, one *shallow* and
+one *deep* embedding. By using equational reasoning we were able to show that
+the semantical constraints were satisfied.
 
 [monoid]: http://en.wikipedia.org/wiki/Monoid
 [monoids]: http://en.wikipedia.org/wiki/Monoid
