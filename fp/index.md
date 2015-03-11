@@ -251,11 +251,13 @@ id >> g = g
 
 ## Types
 
-* There is a problem. You can't really take simple untyped $$\lambda$$-calculi as a good guide for calculations.
+* There is a problem. You can't really take simple untyped $$\lambda$$-calculi
+ as a good guide for calculations.
 
 * Consider the following term: $$ \lambda x.(x x)  \lambda x.(x x)$$.
 
-* To defeat this Church and Curry introduced types to $$\lambda$$-calculi and made it a firm foundation for computation.
+* To defeat this Church and Curry introduced types to $$\lambda$$-calculi and
+ made it a firm foundation for computation.
 
 
 - Types are essential to maintain consistency in a formal
@@ -470,19 +472,18 @@ looking up the value of a variable:
 let eval (env: String -> bool) (exp: Exp) : bool = ??
 
 {% endhighlight %}
-
-
 # <a name="module2"></a> The Functor Pattern
-
-In category theory a *functor* is a mapping between two categories. 
-They also arise naturally in programming as parameterized types (often containers) such
+In category theory a *functor* is a mapping between two categories.  They also
+arise naturally in programming as parameterized types (often containers) such
 as lists, options and trees. 
 
-They powerful framework for deciding when it's safe to refactor code and are also the foundation
-for more complex patterns such as *applicative functors* and *monads*.
+They powerful framework for deciding when it's safe to refactor code and are
+also the foundation for more complex patterns such as *applicative functors*
+and *monads*.
 
-In this session we were looking closer at common functions operating on lists, introduced the functor pattern
-and gave an example of using the functor pattern when designing a library for image manipulation.
+In this session we were looking closer at common functions operating on lists,
+introduced the functor pattern and gave an example of using the functor pattern
+when designing a library for image manipulation.
 
 #### Aggregating elements
 
@@ -806,21 +807,21 @@ let flipHorizontal img =
 
 
 {% highlight fsharp %}
-/// Flips an image vertically.
-let flipVertical<'T> : Image<'T> -> Image<'T> = 
-    transpose >> flipHorizontal >> transpose
 
-/// Shifts an image horizontally.
-let moveX l img =
-    img |> setGetPixel (fun x y -> img.GetPixel (x - l) y)
-    
-/// Shifts an image vertically.
-let moveY l = transpose >> moveX l >> transpose
+    /// Flips an image vertically.
+    let flipVertical<'T> : Image<'T> -> Image<'T> = 
+        transpose >> flipHorizontal >> transpose
 
-let crop x y w h =
-    moveX (-x) >> moveY (-y) >> setWidth w >> setHeight h
+    /// Shifts an image horizontally.
+    let moveX l img =
+        img |> setGetPixel (fun x y -> img.GetPixel (x - l) y)
+        
+    /// Shifts an image vertically.
+    let moveY l = transpose >> moveX l >> transpose
 
-{% endhighlight %}
+    let crop x y w h =
+        moveX (-x) >> moveY (-y) >> setWidth w >> setHeight h
+    {% endhighlight %}
 
 #### Image as a Functor
 
