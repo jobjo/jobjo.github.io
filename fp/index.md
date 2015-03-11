@@ -7,6 +7,7 @@ title: Design patterns for functional programming
 
 * [The Category Pattern](#module1)
 * [The Functor Pattern](#module2)
+* [The Monoid Pattern](#module3)
 
 
 # The Category Pattern
@@ -687,6 +688,9 @@ let lengthOptionString (os: option<string>) =
 * `(map f >> map g) ?= map (f >> g)`
 
 
+![Category](img/functors.png)
+![Category](img/nat-trans.png)
+
 {% highlight fsharp %}
 
 (map f >> map g) None     =
@@ -856,8 +860,165 @@ let image =
 
 
 
+# <a name="module3"></a> The Monoid Pattern
+Monoids are useful for accomplishing composition of elements in a way that the
+result is intuitive and can be refactored safely. In category theory they are
+described as:
 
-  
+![Category](img/monoid.png)
+
+
+
+A monoid in F# for type T is defined by:
+
+* An element `z: T`
+* An operation `(<+>): T -> T -> T`
+
+So that the following constraints hold:
+
+* `x <+> z = x` 
+* `z <+> x = x`
+* `x <+> (y <+> v) = (x <+> y) <+> v`
+
+For instance the natural numbers form two monoids. One for addition:
+
+{% highlight fsharp %}
+z = 0
+add = (+)
+{% endhighlight %}
+
+And another one for multiplication:
+
+{% highlight fsharp %}
+z = 1
+add = (*)
+{% endhighlight %}
+
+#### The List Monoid
+One of the most commonly used monoids are lists:
+{% highlight fsharp %}
+z = []
+add = (@)
+{% endhighlight %}
+
+To prove that the monoids law for identity and associativity hold we need to
+check the definition for list concatenation:
+
+{% highlight fsharp %}
+let rec (@) xs ys = 
+    match xs, ys with
+    | [] , _        -> ys
+    | _, []         -> xs
+    | x :: xs, _    -> x :: (xs @ ys) k
+{% endhighlight %}
+
+Which can be written more succinctly with a `foldRight`:
+
+{% highlight fsharp %}
+let (@) (xs: list<'T>) (ys: list<'T>) = 
+  foldRight (fun x xs -> x :: xs)  xs ys
+{% endhighlight %}
+
+First identity:
+{% highlight fsharp %}
+// By definition of @
+[] @ xs = xs
+// By definition of @
+xs @ [] = xs
+{% endhighlight %}
+
+{% highlight fsharp %}
+
+// Empty case
+[] @ (ys @ zs)                  = 
+// Def of @
+ys @ zs                         = 
+// Use identity prop
+(ys @ []) @ zs
+
+(x :: xs) @ (ys @ zs)           =
+// Definition of @
+x :: (xs @ (ys @ zs))
+
+(x :: xs @ ys) @ (zs)           =
+// Defintion of @
+x :: ((xs @ ys) @ zs)
+{% endhighlight %}
+
+
+#### Monoids for images
+
+There are many possibilities for composing images. For instance by placing two
+images next to each other.
+
+In order to achieve compositionality via monoids we need to define an empty
+`Image`:
+
+{% highlight fsharp %}
+/// Empty image.
+let empty = { Width = 0; Height = 0; GetPixel = fun _ _ -> None }
+{% endhighlight %}
+
+{% highlight fsharp %}
+/// Horizontal composition.
+let next (img1: Image<'T>) (img2: Image<'T>) : Image<'T> =
+    {
+        Width = img1.Width + img2.Width 
+        Height = max img1.Height img2.Height
+        GetPixel = fun x y ->
+            if x < img1.Width then 
+                img1.GetPixel x y 
+            else 
+                img2.GetPixel (x - img1.Width) y
+    }
+{% endhighlight %}
+
+There is also a corresponding operation for composing images vertically:
+{% highlight fsharp %}
+
+/// Vertical composition.
+let above (img1: Image<'T>) (img2: Image<'T>) : Image<'T> =
+    transpose <| next (transpose img1) (transpose img2)
+
+{% endhighlight %}
+
+#### Operations for free
+By defining monoid operators for composing two elements we automatically get a
+function for composing a sequence horizontally:
+
+{% highlight fsharp %}
+/// Horizontal composition
+let horizontal : seq<Image> : Image = Seq.fold next empty
+{% endhighlight %}
+
+And another one for vertical composition:
+
+{% highlight fsharp %}
+/// Vertical composition
+let vertical : seq<Image> : Image = Seq.fold above empty
+{% endhighlight %}
+
+Here are some examples of how to use the operators:
+
+{% highlight fsharp %}
+let baseImg = 
+    B.fromURL url |> crop 30 10 200 240
+
+let blackWhiteImg = 
+    map (C.toBlackWhite >> C.invert >> C.fromBlackWhite) baseImg
+
+let wideImg = 
+    horizontal [baseImg; blackWhiteImg]
+
+let composedImg =
+    vertical [
+        wideImg
+        flipVertical wideImg
+    ]
+{% endhighlight %}
+
+![Category](img/image-composed.png)
+
 
   
 

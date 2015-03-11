@@ -4,6 +4,7 @@ title: Designing services on top of immutable data structures
 ---
 Using immutable data structures enables equational reasoning and assures that update operations are atomic. However, purely immutable interfaces are not always feasible. For instance a *RESTful* service typically needs to propagate the effects of update operations to other clients. In this post I describe a strategy for constructing mutable service interfaces on top of purely immutable data structures. I'm using F# to exemplify.
 
+
 ## Building a Player Service
 Consider the task of designing a service for managing player information for some online game. The core API needs to support methods for retrieving and updating a set of players given some search criterion; Here is simple interface capturing the requirements:
 
@@ -28,6 +29,7 @@ Also assume the following set of constraints:
 The above interface is apparently *non-pure* since `UpdatePlayers` impacts future behavior of `FindPlayers` as a side effect.
 
 What is a good data-structure for this problem? It may seem intuitive to pick a traditional mutable dictionary (such a a `HashTable`) for maintaining the set of players when realizing the interface. However, there are several challenges with such approach; Assuring atomicity of update operations would require a locking strategy, but blocking `FindPlayers` while waiting for the lock to be released is not feasible because of constraint (2). Ignoring the lock (*dirty reading*) is also not an option since it may violate (4) by leaking data from an inconsistent state.
+
 
 ## An immutable version
 Rather than addressing these problems in a mutable setting, let's start by designing a pure interface with the hope of later being able to convert it to a mutable version:
@@ -79,7 +81,7 @@ let buildPlayerServicePure players =
     |> build     
 {% endhighlight %}
 
-Given a sequence of players, `buildPlayersService` constructs a service object.Here are some examples of how to program with the immutable service:
+Given a sequence of players, `buildPlayersService` constructs a service object. Here are some examples of how to program with the immutable service:
 
 {% highlight fsharp %}
 // Build a new service
@@ -97,6 +99,7 @@ let service = service.UpdatePlayers {Names = ["John"]} <| fun p ->
 Update operations are atomic by definition since the only way of noticing the effect of an update is via the next service state returned by `UpdatePlayers`. Any other problems requiring locking or synchronization do not apply.
 
 Designing and reasoning about the pure implementation is straight forward but we are not able to directly build a web-service interface on top of it. The fundamental problem is that any update operation requested by one user would not be visible to others users.
+
 
 ## Deriving a service wrapper
 To implement the original interface we wish to define a transformation from values of `PlayerServicePure` to `PlayerService` values also satisfying the constraints given above. The strategy is to capture the latest state of the service by a mutable reference and replace it with newer versions as update operations are processed. Here is an initial attempt:
@@ -196,3 +199,4 @@ Current credit for John is 1000
 As seen, all update operations were accounted for. That's not a guarantee but at least an indication that the implementation is sound.
 
 By introducing a thin service layer on top of a pure immutable interface, much of the headache typically involved in designing thread-safe mutable data structures can be avoided. Using this strategy, business logic may be expressed solely in terms of pure functions. Although this example is may seem specific, my experience is that the pattern is general and applicable on many types or services providing CRUD interfaces.
+
