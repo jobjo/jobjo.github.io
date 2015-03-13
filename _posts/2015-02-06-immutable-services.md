@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Designing services on top of immutable data structures
+title: Building services on top of immutable data structures
 ---
 Using immutable data structures enables equational reasoning and assures that update operations are atomic. However, purely immutable interfaces are not always feasible. For instance a *RESTful* service typically needs to propagate the effects of update operations to other clients. In this post I describe a strategy for constructing mutable service interfaces on top of purely immutable data structures. I'm using F# to exemplify.
 
@@ -199,4 +199,5 @@ Current credit for John is 1000
 As seen, all update operations were accounted for. That's not a guarantee but at least an indication that the implementation is sound.
 
 By introducing a thin service layer on top of a pure immutable interface, much of the headache typically involved in designing thread-safe mutable data structures can be avoided. Using this strategy, business logic may be expressed solely in terms of pure functions. Although this example is may seem specific, my experience is that the pattern is general and applicable on many types or services providing CRUD interfaces.
+
 
