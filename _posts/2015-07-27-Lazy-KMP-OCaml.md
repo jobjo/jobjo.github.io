@@ -191,8 +191,8 @@ let search cs = run @@ generate_pattern cs
 {% endhighlight %}
 
 Perhaps a bit mind boggling (at least for me) but I hope this example helps to
-showcases how *lazy data structures* may be used as an optimization technique;
-At least providing an alternative to more imperative approaches such as
+showcase how *lazy data structures* may be used as an optimization technique,
+at least providing an alternative to more imperative approaches such as
 mutable arrays.
 
 Thanks to [Shayne Fletcher] for coming up with the challenge in the first place.
