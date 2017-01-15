@@ -3,9 +3,9 @@ layout: post
 title: The mice moving challenge
 ---
 
-A few weeks ago I stumbled upon a logic puzzle handed out as a *holiday challenge*. 
-I didn't solve it by hand but turned to *Haskell* for some help. As it proved to be a fun 
-little exercise I decided to pass the challenge on and invited some friends to 
+A few weeks ago I came across a logic puzzle handed out as a *holiday challenge*. 
+I didn't solve it by hand but instead turned to *Haskell* for some help. As it proved to be a fun 
+exercise I decided to pass the challenge on and invited some friends to 
 contribute with solutions in a language of their choice. I here present
 the given puzzle along with the set of submissions received.
 
@@ -633,13 +633,13 @@ main = do
 {% endhighlight %}
 
 ### Conclusion
-The exercise itself is relatively straight forward and can be tackled
-by a backtracking algorithm exploring the full solution space. Most submissions
+The exercise is relatively straight forward and can be tackled
+by a backtracking algorithm exploring the full configuration space. Most submissions
 from above are implementations of this algorithm. The variety stems
-from how a configuration is represented and the encoding of rules. 
+from how a configuration is represented and the encoding of feasible moves.
 
-As for the actual solutions, here's a sequence of feasible moves leading
-up to the final configuration:
+As for the actual solution to the puzzle itself, here's a sequence of 
+moves leading up to the final configuration:
 
 {% highlight haskell %}
 [>,>,>,_,<,<,<]
