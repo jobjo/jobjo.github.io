@@ -34,20 +34,20 @@ To give a concrete example, in the category of types and functions in ML, the
 tuple type `int * string` can be safely substituted with a record type:
 
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 type person = {name : string; age : int}
 {% endhighlight %}
 
 Proving this is trivial, one simply needs to define a function for converting
 a tuple to a person:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 let to_person (name,age) = { name = name; age = age }
 {% endhighlight %}
 
 And show that:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 (to_person t).name = fst t
 (to_person t).age  = snd t
 {% endhighlight %}
@@ -62,7 +62,7 @@ isomorphic to $$A \times (B \times C)$$.
 The following signature captures all there is to know about products,
 abstracting over the concrete type:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 module type Product = sig
     (* The type of the product. *)
     type ('a, 'b) product
@@ -80,7 +80,7 @@ end;;
 
 First, let's implement the interface using tuples:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 module Tuple_Product : Product = struct
     type ('a, 'b) product = 'a * 'b
     let mk x y = (x,y)
@@ -100,7 +100,7 @@ passing it an `'a` and a `'b` value. The particular values are captured within t
 function. Here is the complete church implementation of the `Product`
 signature:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 
 module Church_Product : Product = struct
     type ('a , 'b) product = { run : 'c. ('a -> 'b -> 'c) -> 'c}
@@ -133,7 +133,7 @@ Just like with products, the diagram must commute. In functional programming,
 each arrow to coproduct type can be represented by a constructor of an
 algebraic data type. For example:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 type contact =
     | Email of string
     | Address of address
@@ -147,7 +147,7 @@ Again, sum types with more than two constructors can be achieved by nesting,
 so in order to define a generalized signature we only need to worry about the
 binary case:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 module type Coproduct = sig
     (* Type representing coproducts. *)
     type ('a, 'b) coproduct
@@ -165,7 +165,7 @@ end;;
 
 Following is an implementation using discriminated unions:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 module DU_Coproduct = struct
     type ('a, 'b) coproduct = | Left of 'a | Right of 'b
     let left x = Left x
@@ -184,7 +184,7 @@ arguments and is equivalent to a discriminated union type with two cases.
 
 Here is a church encoded version of the coproduct interface:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 module Church_Coproduct : Coproduct = struct
   type ('a, 'b) coproduct =
     { run : 'c. ('a -> 'c) -> ('b -> 'c) -> 'c }
@@ -204,7 +204,7 @@ consider defining a simple list structure. First look at the standard
 implementation of lists using a discriminated union:
 
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 let 'a list =
     | Nil
     | Cons of ('a * 'a list) 
@@ -213,7 +213,7 @@ let 'a list =
 This can be translated to the following type in terms of the `Product` and
 `Coproduct` signatures:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 type 'a ch_list = 
     { ext : (unit, ('a, 'a ch_list) product) coproduct }
 {% endhighlight %}
@@ -224,7 +224,7 @@ of a product with value of type `a` and the rest of the list.
 In order to simplify the creation of lists, here are a couple of helper
 functions:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 
 (* Helper for construct a list. *)
 let mk_list v = { ext = v }
@@ -240,7 +240,7 @@ let cons x xs = mk_list @@ right @@ mk x xs
 
 We can also define a utility method for simulating pattern matching:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 let rec match_list lst nil cons =
   run lst.ext 
     nil
@@ -249,7 +249,7 @@ let rec match_list lst nil cons =
 
 With these definitions, the standard `List.map` can be ported to:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 let rec map f xs =
   match_list xs 
     (fun _    -> empty)
@@ -262,7 +262,7 @@ ordinary lists.
 At last, following are the conversion functions required for showing that the two
 versions of lists are indeed isomorphic:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 
 (* Convert to ordinary list. *)
 let rec to_list lst =

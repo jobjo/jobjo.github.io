@@ -8,7 +8,7 @@ Using immutable data structures enables equational reasoning and assures that up
 ## Building a Player Service
 Consider the task of designing a service for managing player information for some online game. The core API needs to support methods for retrieving and updating a set of players given some search criterion; Here is simple interface capturing the requirements:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 type PlayerService = {
     FindPlayers : SearchConfiguration -> list<Player>
     UpdatePlayers : SearchConfiguration -> (Player -> Player) -> unit
@@ -34,7 +34,7 @@ What is a good data-structure for this problem? It may seem intuitive to pick a 
 ## An immutable version
 Rather than addressing these problems in a mutable setting, let's start by designing a pure interface with the hope of later being able to convert it to a mutable version:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 type PlayerServicePure = 
     {
         FindPlayers : SearchConfiguration -> list<Player>
@@ -46,7 +46,7 @@ The only difference from the previous API is that `UpdatePlayers` now returns th
 
 The following example uses a standard FSharp *Map* for storing players. Simplistic definitions of `SearchConfiguration` and `Player` are also provided:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 // Represent a player.
 type Player = {Name : string ; Credit : int }
 
@@ -83,7 +83,7 @@ let buildPlayerServicePure players =
 
 Given a sequence of players, `buildPlayersService` constructs a service object. Here are some examples of how to program with the immutable service:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 // Build a new service
 let service = buildPlayerServicePure ["John"; "Jane"; "James"]
 
@@ -104,7 +104,7 @@ Designing and reasoning about the pure implementation is straight forward but we
 ## Deriving a service wrapper
 To implement the original interface we wish to define a transformation from values of `PlayerServicePure` to `PlayerService` values also satisfying the constraints given above. The strategy is to capture the latest state of the service by a mutable reference and replace it with newer versions as update operations are processed. Here is an initial attempt:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 let buildService players =
     let service = ref buildPlayerServiceIM players
     {
@@ -119,7 +119,7 @@ let buildService players =
 To accommodate for this we must synchronize the updates so that subsequent operations will be placed in a queue in case the service is currently updating.
 There is already built in support for this in F# via the `MailBoxProccing` library providing message passing capabilities between concurrent computations.Here is the extended version based on a `MailBox` process:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 let buildPlayerService players =
     let service = ref <| buildPlayerServicePure players
     let updateProc = MailboxProcessor.Start <| fun inbox ->
@@ -142,7 +142,7 @@ Incoming update requests are now processed one at the time since the recursive c
 
 Following is an example of programming with the interface:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 // Build the service
 let service =
     buildPlayerService [ "John" ; "Jane" ; "James" ] 
@@ -185,7 +185,7 @@ trackJohn ()
 
 The `addCredit` function is deliberately made slower in order to test that the implementation can handle queued update operations. Ten *async computations* each invoking `addCredit` 100 times, increasing the amount of credit for the player *John*. In the meanwhile another thread repeatedly reports the current credit status. Here is some output of running the program:
 
-{% highlight fsharp %}
+{% highlight ocaml %}
 Current credit for John is 48
 Current credit for John is 95
 ...

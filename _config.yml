@@ -29,16 +29,13 @@ theme:
   str_continue_reading: "Continue reading"
 
 # PAGINATION
-paginate: 5
+paginate: 10
 paginate_path: "blog/page:num"
 
 # BUILD SETTINGS
 markdown: kramdown
-highlighter: pygments
+highlighter: rouge
 
 sass:
   sass_dir: _sass
   style: :compressed
-
-# Build settings
-markdown: kramdown
