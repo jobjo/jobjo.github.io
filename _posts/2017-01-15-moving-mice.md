@@ -243,7 +243,7 @@ What sticks out to me is how the configuration is represented by two lists
 rather than one.  This allows for concise rule definitions (`possibleMoves`). 
 Note that the first list of a configuration is in reverse order.
 
-Sebastian O. first submitted a manually crafted solution but then also brought 
+Sebastian O. first submitted a hand crafted solution but then also brought 
 some C# to the table:
 
 {% highlight csharp %}
