@@ -5,7 +5,7 @@ title: The mice moving challenge
 
 A few weeks ago I came across a logic puzzle handed out as a *holiday challenge*. 
 I didn't solve it by hand but instead turned to *Haskell* for some help. As it proved to be a fun 
-exercise I decided to pass the challenge on and invited some friends to 
+exercise I decided to pass it on and invited some friends to 
 contribute with solutions in a language of their choice. I here present
 the given puzzle along with the set of submissions received.
 
