@@ -5,8 +5,9 @@ title: The mice moving challenge
 
 A few weeks ago I stumbled upon a logic puzzle handed out as a *holiday challenge*. 
 I didn't solve it by hand but turned to *Haskell* for some help. As it proved to be a fun 
-little exercise I decided to pass the challenge on and invited some of my friends to 
-contribute with solutions in a language of their choice.
+little exercise I decided to pass the challenge on and invited some friends to 
+contribute with solutions in a language of their choice. I here present
+the given puzzle along with the set of submissions received.
 
 ## The problem
 There are two types of mice, left leaning (`<`) and right leaning (`>`).
