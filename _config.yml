@@ -3,30 +3,29 @@ baseurl: "" # the subpath of your site, e.g. /blog/
 url: "http://jobjo.github.io/" # the base hostname & protocol for your site
 
 # THEME-SPECIFIC CONFIGURATION
-theme:
-  # Meta
-  title: Notes on Computing
-  avatar: avatar.png
-  gravatar: # email md5 hash
-  description: "A website with blog posts, and pages." # used by search engines
+# Meta
+title: Notes on Computing
+avatar: avatar.png
+gravatar: # email md5 hash
+description: "A website with blog posts, and pages." # used by search engines
 
-  # Icons
-  rss: false
-  email_address: joel.bjornson@gmail.com
-  github: "jobjo"
-  twitter: "joelbjornson"
+# Icons
+rss: false
+email_address: joel.bjornson@gmail.com
+github: "jobjo"
+twitter: "joelbjornson"
 
-  # Scripts
-  google_analytics: # tracking id, e.g. "UA-000000-01"
-  disqus_shortname:
+# Scripts
+google_analytics: # tracking id, e.g. "UA-000000-01"
+disqus_shortname:
 
-  # Localization strings
-  str_follow_on: "Follow on"
-  str_rss_follow: "Follow RSS feed"
-  str_email: "Email"
-  str_next: "Next"
-  str_prev: "Prev"
-  str_continue_reading: "Continue reading"
+# Localization strings
+str_follow_on: "Follow on"
+str_rss_follow: "Follow RSS feed"
+str_email: "Email"
+str_next: "Next"
+str_prev: "Prev"
+str_continue_reading: "Continue reading"
 
 # PAGINATION
 paginate: 10
@@ -39,3 +38,5 @@ highlighter: rouge
 sass:
   sass_dir: _sass
   style: :compressed
+
+gems: [jekyll-paginate]

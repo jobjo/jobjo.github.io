@@ -4,8 +4,8 @@ layout: default
 <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 <div class="home">
 
-  {% if site.theme.header_text %}
-  <div class="call-out">{{ site.theme.header_text }}</div>
+  {% if site.header_text %}
+  <div class="call-out">{{ site.header_text }}</div>
   {% endif %}
 
   <div class="posts">
@@ -23,7 +23,7 @@ layout: default
       <div class="excerpt">
         {{ post.excerpt }}
 
-        <a class="button" href="{{ post.url | prepend: site.baseurl }}">{{ site.theme.str_continue_reading }}</a>
+        <a class="button" href="{{ post.url | prepend: site.baseurl }}">{{ site.str_continue_reading }}</a>
       </div>
       
     </div>
@@ -36,13 +36,13 @@ layout: default
     {% if paginator.previous_page %}
     <a href="{{ paginator.previous_page_path | prepend: site.baseurl | replace: '//', '/' }}" class="button" >
       <i class="fa fa-chevron-left"></i> 
-      {{ site.theme.str_prev }}
+      {{ site.str_prev }}
     </a>
     {% endif %}
 
     {% if paginator.next_page %}
     <a href="{{ paginator.next_page_path | prepend: site.baseurl | replace: '//', '/' }}" class="button" >
-      {{ site.theme.str_next }} 
+      {{ site.str_next }} 
       <i class="fa fa-chevron-right"></i>
     </a>
     {% endif %}
