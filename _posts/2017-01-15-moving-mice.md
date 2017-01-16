@@ -104,25 +104,31 @@ The next one is from Gyorgy F. who submitted the following *Clojure* code:
 {% highlight clojure %}
 (ns joel-challenge.core
   (:gen-class))
+
 (def initial-position [:> :> :> :_ :< :< :<])
+
 (def target-position [:< :< :< :_ :> :> :>])
+
 (defn empty-in-position [position]
   (first (keep-indexed (fn [idx slot]
                          (when  (= slot :_)
                            idx))
                        position)))
+
 (defn step-right [position]
   (let [empty-slot (empty-in-position position)]
     (when-let [left-slot  (when  (> empty-slot 0)
                             (position (- empty-slot 1)))]
       (when (= :> left-slot)
         (assoc position (- empty-slot 1) :_  empty-slot :>)))))
+
 (defn step-left [position]
   (let [empty-slot (empty-in-position position)]
     (when-let [right-slot  (when  (> (count position) (+ empty-slot 1))
                              (position (+ empty-slot 1)))]
       (when (= :< right-slot)
         (assoc position (+ empty-slot 1) :_ empty-slot :<)))))
+
 (defn jump-right [position]
   (let [empty-slot (empty-in-position position)]
     (when-let
@@ -130,6 +136,7 @@ The next one is from Gyorgy F. who submitted the following *Clojure* code:
                   (position (- empty-slot 2)))]
       (when (= :> left-slot)
         (assoc position (- empty-slot 2) :_ empty-slot :>)))))
+
 (defn jump-left [position]
   (let [empty-slot (empty-in-position position)]
     (when-let
@@ -137,53 +144,56 @@ The next one is from Gyorgy F. who submitted the following *Clojure* code:
                    (position (+ empty-slot 2)))]
       (when (= :< right-slot)
         (assoc position (+ empty-slot 2) :_ empty-slot :<)))))
+
 (defn generate-moves [position]
-  (vec ((juxt step-left step-right jump-left jump-right) position)))
+  (lazy-seq ((juxt step-left step-right jump-left jump-right) position)))
+
 (defn generate-move-tree-node [position]
   (when position
     {:position position  :children (generate-moves position)}))
+
 (defn generate-move-tree [{:keys [:position :children]}]
   (when-let [child-nodes (map generate-move-tree-node children)]
-    (let [results  (for [child child-nodes]
-                     (generate-move-tree child))]
+    (let [results
+          (for [child child-nodes]
+            (generate-move-tree child))]
       (when position
         {:position position :children (remove nil? results)}))))
+	
 (defn solutions [init target]
-  (let [tree (generate-move-tree  (generate-move-tree-node init))]
-    (letfn [(walk [{:keys [:position :children] :as node}]
-              (loop [current {:path [position] :node (first children)}
-                     next  (map
-                            (fn [x] {:path [position] :node x})
-                            (rest children))
-                     results []]
-                (if-let [next-node (first (:children (:node current)))]
-                  (let [path (:path current)
-                        new-path (conj path (:position (:node current)))
-                        to-add (map (fn [x] {:path new-path :node x})
-                                    (rest (:children (:node current))))
-                        remaining (concat to-add next)
-                        ]
-                    (recur {:path new-path :node next-node} remaining results))
-                  (if-let [new (first next)]
-                    (if (= (:position (:node  current)) target)
-                      (recur new (rest next) (into results [(conj (:path current) (:position (:node current)) )]))
-                      (recur new (rest next) results))
-                    (if (= (:position (:node current)) target)
-                      (into results [(:path current)])
-                         results)))))]
-      (walk tree))))
+  (let [{:keys [:position :children]}
+        (-> init
+            generate-move-tree-node
+            generate-move-tree)]
+    (loop [{:keys [:path :node]} {:path [position] :node (first children)}
+           next-nodes (map
+                       (fn [x] {:path [position] :node x})
+                       (rest children))
+           results []]
+      (if-let [next-node (first (:children node))]
+        (let [new-path (conj path (:position node))
+              to-add (map (fn [x] {:path new-path :node x})
+                          (rest (:children node)))
+              remaining (concat to-add next-nodes)]
+          (recur {:path new-path :node next-node} remaining results))
+        (if-let [next-node (first next-nodes)]
+          (if (= (:position node) target)
+            (recur next-node (rest next-nodes)
+                   (into results [(conj path (:position node))]))
+            (recur next-node (rest next-nodes) results))
+          (if (= (:position node) target)
+            (into results [path])
+            results))))))
+	    
 (defn print-solutions [init target]
   (doseq [solution (solutions init target)]
-    (println "-------------------")
+    (println "----------------------")
     (doseq [row solution]
-      (println row))
-    )
-  )
+      (println row))))
+
 (defn -main
-  "I don't do a whole lot ... yet."
   [& args]
   (print-solutions initial-position target-position))
-		
 {% endhighlight %}
 
 Here, a tree structure is built up where a node corresponds
@@ -494,7 +504,7 @@ Daniel also appearantly managed to solve the problem without turning to computer
 and the program is codifying a strategy rather than searching and backtracking
 for solutions.
 
-Oszkar J. then submitted the follwoing versioni in *JavaScript*:
+Oszkar J. then submitted the follwoing version in *JavaScript*:
 
 {% highlight javascript %}
 const init = ['>', '>', '>', '_', '<', '<', '<']
@@ -546,12 +556,11 @@ const search = (state, depth = 50) => {
 {% endhighlight %}
 
 Note the clever way of accumulating the neighbouring states by folding over
-a configuration array in the `nexts` function.
+a configuration array in the `nexts` function. Also striking how seemingly 
+functional *JavaScript* has become, particularly with the addition of `const` and `=>` 
+keywords (these were both new to me).
 
-Also striking how seemingly functional *JavaScript* has become, particularly with 
-the addition of `const` and `=>` keywords (these were both new to me).
-
-Tamas K. further diversified the solution space by submitting the these lines of *R*:
+Tamas K. further added on to diversity by submitting the these lines of *R*:
 
 {% highlight r %}
 require(rlist)
@@ -583,7 +592,7 @@ find <- function(input){
 find(step(moves(start)))
 {% endhighlight %}
 
-Another very concise program! Similar to Sebastian's solution in how it's
+Another very concise program! Similar to Sebastian's approach in how it's
 using the position of the empty slot in the `moves` function. The program does 
 not preserve the configuration states however.
 
