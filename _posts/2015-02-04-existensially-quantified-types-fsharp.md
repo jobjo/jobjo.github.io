@@ -4,7 +4,7 @@ title: Church encoding and existentially quantified types in F#
 ---
 
 Can you imagine an F# compiler that doesn't understand discriminated unions (aka algebraic data types)? 
-For sure not  an attractive scenario but perhaps just not as horrifying as you might expect. 
+For sure not an attractive scenario but perhaps just not as horrifying as you might expect. 
 For example consider how the familiar option type is defined in F#:
 
 {% highlight ocaml %}
@@ -189,17 +189,3 @@ Looking at  `printResult`, the similarities with ordinary pattern matching over 
 
 On a practical note, church encoding is a form of [continuation passing style](http://en.wikipedia.org/wiki/Continuation-passing_style) 
 and is sometimes used as an optimization technique. However, the F# encoding using interfaces is likely more expensive than sticking with regular algebraic data types.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
