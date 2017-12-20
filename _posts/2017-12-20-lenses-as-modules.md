@@ -49,7 +49,7 @@ In OCaml this can be represented using a module signature:
 module type FUNCTOR = sig
   type 'a t
   val map : ('a -> 'b) -> 'a t -> 'b t
-end;;
+end
 {% endhighlight %}
 
 For a more comprehensive discussion on how to map type classes in Haskell
