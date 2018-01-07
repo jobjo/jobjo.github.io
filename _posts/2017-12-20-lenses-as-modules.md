@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Lenses via modules
+title: OCaml lenses via modules
 ---
 Lenses, often described as first class getters and setters, can help
 simplify code for manipulating nested data structures. In this
