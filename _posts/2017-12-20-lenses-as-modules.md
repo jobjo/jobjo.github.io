@@ -5,28 +5,27 @@ title: Lenses via modules
 Lenses, often described as first class getters and setters, can help
 simplify code for manipulating nested data structures. In this
 post I'm going to look at how to map the most popular Haskell representation,
-the so called [van Laarhoven lenses](https://www.twanvl.nl/blog/haskell/cps-functional-references)
-to OCaml;
+[van Laarhoven lenses](https://www.twanvl.nl/blog/haskell/cps-functional-references),
+to OCaml.
 
 ### Lenses ala van Laarhoven
-I won't cover lenses in Haskell here as there is plenty of material around
-already. A good entry point is [this
-talk](https://skillsmatter.com/skillscasts/4251-lenses-compositional-data-access-and-manipulation).
-For now, here's a basic definition of a lens in Haskell, first proposed by
+I won't cover lenses in Haskell but a good starting point is [this
+talk](https://skillsmatter.com/skillscasts/4251-lenses-compositional-data-access-and-manipulation)
+by Simon Peyton Jones. Following is the the basic definition of a lens, first proposed by
 [Twan van Laarhoven](https://www.twanvl.nl/blog/haskell/cps-functional-references):
 
 {% highlight haskell %}
 type Lens a b = forall f. Functor f => (b -> f b) -> (a -> f a)
 {% endhighlight %}
 
-As we shall see, the curious thing is is that this data type embeds
+As we shall see, the curious thing is that this data type embeds
 a *getter* for extracting values as well as a *setter* for
 updating a value. This is possible by varying the choice of the `Functor` on
 the call site.
 
 ### Mapping to OCaml
 The Haskell definition above is not directly translatable to OCaml due to
-the lack of higher kinded types. That is, the following attempt does not quite 
+the lack of higher-kinded polymorphism. That is, the following attempt does not quite 
 work:
 
 {% highlight haskell %}
@@ -144,7 +143,7 @@ For this purpose we ultimately need the `run` function of a lens to be identical
 let run f x = { x with address = f x.address }
 {% endhighlight %}
 
-For that, we simply pick the functor that does not do
+This can be achieved by picking a functor that does not do
 anything besides applying the argument; The so called identity functor:
 
 {% highlight ocaml %}
@@ -193,9 +192,7 @@ let postcode =
 {% endhighlight %}
 
 
-
 Here's how to use `modify` to map over the postcode:
-
 
 {% highlight ocaml %}
 let address = { street = "Highstreet"; number = 42; postcode = "e1w" };;
@@ -217,10 +214,11 @@ where
 val set : ('a,'b) lens -> 'b -> 'a -> 'a
 {% endhighlight %}
 
-For example, setting the address of a person can be done via:
+Here's an example that *sets* the postcode of the address value above:
 
 {% highlight ocaml %}
-set address person new_address
+set postcode "XYZ" address;;
+- : address = {street = "Highstreet"; number = 42; postcode = "XYZ"}
 {% endhighlight %}
 
 ### Extracting values
@@ -232,16 +230,16 @@ signature:
 val view : ('a, 'b) lens -> 'a -> 'b
 {% endhighlight %}
 
-To instead use lenses for extracting values involves some cleverness in terms
+Extracting values using lenses involves some cleverness in terms
 of picking the right functor. For example, to get the address from a
-person using the `address` lens from above, we need:
-
+person via the `address` lens from above, we to tweak the run function.
+Looking at its defintion again:
 {% highlight ocaml %}
 let run f x = F.map (fun address -> { x with address }) @@ f x.address
 {% endhighlight %}
 
-to evaluate to `x.address`. The trick is to pick a functor that ignores
-the function argument and returns a constant value:
+We need `run` to evaluate to `x.address`. The trick is to pick a functor that
+ignores the function argument and returns a constant value:
 
 {% highlight ocaml %}
 module type TYPE = sig type t end
@@ -251,7 +249,7 @@ module ConstFunctor (T : TYPE) : FUNCTOR with type 'a t = T.t = struct
 end
 {% endhighlight %}
 
-With `ConstFunctor` at our disposal a function `view` can be accomplished via:
+With `ConstFunctor` at our disposal a function `view` can be accomplished with:
 
 {% highlight ocaml %}
 let view  (type u)
@@ -273,9 +271,9 @@ view postcode { street = "Highstreet"; number = 42; postcode = "e1w" };;
 {% endhighlight %}
 
 ### Composing lenses
-There would be little point in defining lenses if it weren't possible
-to compose them. We can either define composition as a module functor via
-a function inlining the module construction. Here's the latter version:
+There would be little point in defining lenses if it weren't for the
+ability to compose them. We can either define composition as a module functor 
+or via a function inlining the module construction. Here's the latter version:
 
 {% highlight ocaml %}
 let compose (type u)
@@ -330,5 +328,3 @@ set (address // postcode) "XYZ" mary;;
         { street = "Highstreet"; number = 42 ; postcode = "XYZ"} }
 
 {% endhighlight %}
-
-
