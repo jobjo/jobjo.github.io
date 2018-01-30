@@ -124,7 +124,7 @@ map (fun y -> y) x  =  x
 map f (map g x)     = map (fun y -> f (g y)) x
 {% endhighlight %}
 
-Ofcourse, this is conditional on having valid concrete functors at the bottom of the stack.
+This is of course conditional on having valid concrete functors at the bottom of the stack.
 For some more background on functors laws
 with OCaml examples, see [this post](blog.shaynefletcher.org/2017/05/more-type-classes-in-ocaml.html).
 
