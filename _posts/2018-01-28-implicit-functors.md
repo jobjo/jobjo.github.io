@@ -1,14 +1,14 @@
----
+j--
 layout: post
 title: Implicit functors
 ---
-Modular implicits is an experimental feature of OCaml that has yet to be
-landed on the master branch. In this and upcomings posts I'm going
-to give a few examples of what it brings to the table in terms of new
-functionality. For an introduction to the topic it's best to read 
-[the original paper](https://www.cl.cam.ac.uk/~jdy22/papers/modular-implicits.pdf).
+Modular implicits is an experimental feature of OCaml that has yet to be landed
+on the master branch. In this and upcomings posts I'm going to give a few
+examples of what it brings to the table. For an introduction to the topic it's
+best to read [the original
+paper](https://www.cl.cam.ac.uk/~jdy22/papers/modular-implicits.pdf).
 
-To run the examples below I'm using a branch of the OCaml compiler available via:
+To run the code below I'm using a branch of the OCaml compiler available via:
 
 {% highlight ocaml %}
 opam switch 4.02.0+modular-implicits
@@ -16,8 +16,8 @@ eval `opam config env`
 {% endhighlight %}
 
 As a first stop, we'll take a look at functors, that is the *functor pattern*
-and not module functors in OCaml. A functor, as inspired by the Haskell type class,
-can be represented in OCaml as a module signature:
+and not module functors. A functor, as inspired by the Haskell type class,
+can be represented in OCaml by a module signature:
 
 {% highlight ocaml %}
 module type FUNCTOR = sig
@@ -26,10 +26,9 @@ module type FUNCTOR = sig
 end
 {% endhighlight %}
 
-The signature states that a functor is a module with some type `'a t` along with a
-`map` function. The canonical example is a `list` with `List.map`. Before
-looking at any concrete instances, we can already make use of modular implicits
-and define the following (generic) map function:
+The signature states that a functor is a module with some type `'a t` along
+with a `map` function. Before looking at any concrete instances, we can already
+make use of modular implicits and define the following (generic) map function:
 
 {% highlight ocaml %}
 let map {F : FUNCTOR} = F.map
@@ -132,4 +131,4 @@ with OCaml examples, see [this post](blog.shaynefletcher.org/2017/05/more-type-c
 An interesting application of these conceepts are in the context of generic
 programming, a topic which I hope to come back to. 
 
-Here is the [complete code](https://gist.github.com/jobjo/41cf3d9d9d5674db32f40afdbf29df18) from the examples above.
+Here is the [complete code](https://gist.github.com/jobjo/41cf3d9d9d5674db32f40afdbf29df18) from the examples above
