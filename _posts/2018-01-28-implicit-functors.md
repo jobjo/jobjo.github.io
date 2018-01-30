@@ -34,7 +34,7 @@ make use of modular implicits and define the following (generic) map function:
 let map {F : FUNCTOR} = F.map
 {% endhighlight %}
 
-Here, `map` is a function that takes an argument `F` of type `FUNCTOR` module, and
+Here, `map` is a function that takes an argument `F` of type `FUNCTOR` module and
 applies its map function. It has the following signature:
 
 {% highlight ocaml %}
