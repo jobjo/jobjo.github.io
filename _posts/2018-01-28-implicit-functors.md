@@ -15,7 +15,7 @@ opam switch 4.02.0+modular-implicits
 eval `opam config env`
 {% endhighlight %}
 
-As a first stop, we'll take a look at functors, that is the *functor pattern*
+At first we'll take a look at functors, that is the *functor pattern*
 and not module functors. A functor, as inspired by the Haskell type class,
 can be represented in OCaml by a module signature:
 
