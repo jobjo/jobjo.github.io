@@ -1,8 +1,8 @@
-j--
+---
 layout: post
 title: Implicit functors
 ---
-Modular implicits is an experimental feature of OCaml that has yet to be landed
+Modular implicits is an experimental feature of OCaml that has yet to land
 on the master branch. In this and upcomings posts I'm going to give a few
 examples of what it brings to the table. For an introduction to the topic it's
 best to read [the original
@@ -51,7 +51,7 @@ map sqrt (Some 9.);;
 {% endhighlight %}
 
 Both these invocations of map are valid given that there exists in scope *implicit*
-modules implementing the `FUNCTOR` signature for types `list` and `option`:
+modules implementing the `FUNCTOR` signature for the `list` and `option` types:
 
 {% highlight ocaml %}
 implicit module ListFunctor = struct
@@ -107,8 +107,7 @@ The reason the examples above type check is because the machinery around
 modular implicits is able derive the functor by first considering
 the product functor and secondly the list composition functor with
 list and option for the first component and the option functor for the second.
-Without the implicitness one would have to manually define the concrete instances,
-as in:
+Without the implicitness one would have to manually do the plumbing, as in:
 
 
 {% highlight ocaml %}
@@ -117,18 +116,20 @@ map {F} String.length ([Some "apple"; None], Some "pear");;
 {% endhighlight %}
 
 What's also worth noticing is that any variation of nested functors or product
-of functors are guaranteed by induction to be well behaved, that is satisfy the functor laws:
+of functors are guaranteed by induction to be well behaved, that is satisfying 
+the functor laws:
 
 {% highlight ocaml %}
 map (fun y -> y) x  =  x
 map f (map g x)     = map (fun y -> f (g y)) x
 {% endhighlight %}
 
-This is on the condition that the concrete functors at the bottom of the stack 
-also satisfy these contstraints. For some more background on functors laws
+Ofcourse, this is conditional on having valid concrete functors at the bottom of the stack.
+For some more background on functors laws
 with OCaml examples, see [this post](blog.shaynefletcher.org/2017/05/more-type-classes-in-ocaml.html).
 
-An interesting application of these conceepts are in the context of generic
+There are some interesting applications of these concepts in the context of generic
 programming, a topic which I hope to come back to. 
 
-Here is the [complete code](https://gist.github.com/jobjo/41cf3d9d9d5674db32f40afdbf29df18) from the examples above
+For now, here is the [complete code](https://gist.github.com/jobjo/41cf3d9d9d5674db32f40afdbf29df18)
+from the examples above.
