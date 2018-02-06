@@ -5,7 +5,7 @@ title: Lenses via modular implicits
 Following is a continuation of the topic of *modular implicits* , introduced in
 the previous post on [implicit
 functors](http://jobjo.github.io/2018/01/28/implicit-functors.html). This time
-we'll take a look at how the extension can help simplifying *lenses*. I covered
+we'll look at how the extension can help simplifying *lenses*. I covered
 lenses in [OCaml lenses via
 modules](http://jobjo.github.io/2017/12/20/lenses-as-modules.html), where a
 rather verbose definition of a (van Laarhoven) lens was given in the form of a
