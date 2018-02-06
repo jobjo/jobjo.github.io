@@ -49,14 +49,13 @@ module ConstFunctor (T : TYPE) = struct
 end
 {% endhighlight %}
 
-Note that all of the definitions above are vanilla OCaml and were also described in
-the [previous lens
-post](http://jobjo.github.io/2017/12/20/lenses-as-modules.html).
+All of the definitions are vanilla OCaml and were also described in
+the [previous lens post](http://jobjo.github.io/2017/12/20/lenses-as-modules.html).
 
 The reason the lens representation required a module signature rather than a
 simple type is due to OCaml's inability to parameterize over higher-kinded
 types. Powered by modular implicits however, there is a work around; We are now
-able to define a lens as a function type:
+able to define lens as a function type:
 
 {% highlight ocaml %}
 type ('a, 'b) lens = {F : FUNCTOR} -> ('b -> 'b F.t) -> 'a -> 'a F.t
@@ -126,7 +125,7 @@ let street { F : FUNCTOR } f x =
   F.map (fun street -> { x with street }) @@ f x.street
 {% endhighlight %}
 
-Although a clear improvement over the module based approach,
+Although an improvement over the module based approach,
 lenses for record properties still require boiler plate code and should rather
 be automated by a *deriving mechanism*.
 
@@ -173,5 +172,4 @@ As you may have observed, there is not a single *implicit* module in the code
 above - the value proposition of modular implicit goes beyond sparing
 an extra argument to a function. 
 
-
-Full code available [here](https://gist.github.com/jobjo/2223edc502e875b4305aae2a735baa62).
+Full code [here](https://gist.github.com/jobjo/2223edc502e875b4305aae2a735baa62).
