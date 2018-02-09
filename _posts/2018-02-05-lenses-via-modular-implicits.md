@@ -172,4 +172,4 @@ As you may have observed, there is not a single *implicit* module in the code
 above - the value proposition of modular implicit goes beyond sparing
 an extra argument to a function. 
 
-Full code [here](https://gist.github.com/jobjo/2223edc502e875b4305aae2a735baa62).
+Complete code [here](https://gist.github.com/jobjo/2223edc502e875b4305aae2a735baa62).
