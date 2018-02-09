@@ -146,7 +146,7 @@ let my_company = {
 {% endhighlight %}
 
 Using the lenses from above, here is how to update the street component
-of company using a composed lens and the `set` function:
+of `my_company` using a composed lens and the `set` function:
 
 {% highlight ocaml %}
 set (ceo // address // street) "Wallstreet" my_company;;
