@@ -4,7 +4,7 @@ url: "http://jobjo.github.io/" # the base hostname & protocol for your site
 
 # THEME-SPECIFIC CONFIGURATION
 # Meta
-title: Notes on Computing
+title: Notes on computing
 avatar:
 gravatar: # email md5 hash
 description: "A website with blog posts, and pages." # used by search engines
