@@ -1,7 +1,7 @@
 module I = struct
+
   let id x = x
   let const x _ = x
-  let (>>) f g x = g (f x)
 
   module Type = struct
     module type S = sig type t end
@@ -11,6 +11,15 @@ module I = struct
     module type S = sig
       type 'a t
       val map : ('a -> 'b) -> 'a t -> 'b t
+    end
+  end
+
+  module Applicative = struct
+    module type S = sig
+      type 'a t
+      val map : ('a -> 'b) -> 'a t -> 'b t
+      val pure : 'a -> 'a t
+      val apply : ('a -> 'b) t -> 'a t -> 'b t
     end
   end
 
@@ -24,24 +33,6 @@ module I = struct
     let map _ x = x
   end
 
-  module Applicative = struct
-    module type S = sig
-      type 'a t
-      val pure : 'a -> 'a t
-      val apply : ('a -> 'b) t -> 'a t -> 'b t
-    end
-    (*
-    let pure {A : S} = A.pure
-    let (<*>) {A : S} = A.apply
-    let (<$>) {A : S} f x = A.pure f <*> x
-    *)
-  end
-
-  module ListFunctor = struct
-    type 'a t = 'a list
-    let map f = List.map f
-  end
-
   module OptionFunctor = struct
     type 'a t = 'a option
     let map f = function
@@ -51,36 +42,33 @@ module I = struct
 
   module OptionApplicative = struct
     type 'a t = 'a option
+    let map f = function
+      | Some x -> Some (f x)
+      | None -> None
+
     let pure x = Some x
     let apply f x =
       match f, x with
-      | Some f, Some x -> Some (f x)
-      | _  -> None
+      | Some f, Some x  -> Some (f x)
+      | _               -> None
   end
-
-  (* module ListApplicative = struct
-    type 'a t = 'a list
-    let pure x = [x]
-    let apply fs xs =
-      List.concat @@ List.map (fun f -> List.map (fun x -> f x) xs) fs
-  end *)
-
-  (* Examples *)
-  open Applicative
 
   module ConstApplicative (T : Type.S) = struct
     type 'a t = T.t option
-    let pure _ = None
-    let map _ x = x
-    let apply _ x =
-      match x with
-      | Some x -> Some x
-      | None -> None
+    let pure _    = None
+    let map _ x   = x
+    let apply _ x = x
   end
+
+  (* module ApplicativeFunctor { A : Applicative.S } = struct
+    type 'a t = 'a A.t
+    let map f x = A.apply (A.pure f) x
+  end *)
+
 
   module Lens = struct
 
-    type ('a, 'b) t = {F : Functor.S} -> ('b -> 'b F.t) -> 'a -> 'a F.t
+    type ('a, 'b) t = { F : Functor.S } -> ('b -> 'b F.t) -> 'a -> 'a F.t
 
     let view (type a) (type b) (l : (a, b) t) (x : a) : b =
       let module C = ConstFunctor (struct type t = b end) in
@@ -100,17 +88,17 @@ module I = struct
 
   (* Prism *)
   module Prism = struct
+
     type ('a, 'b) t = { A : Applicative.S } -> ('b -> 'b A.t) -> 'a -> 'a A.t
 
     let view (type a) (type b) (p : (a, b) t) (x : a) : b option =
       let module C = ConstApplicative (struct type t = b end) in
-      p {C} (fun x -> Some x) x
+      p {C} (fun y -> Some y) x
 
     let modify (type a) (type b) (p : (a, b) t) (f  : b -> b) (x : a) =
       let module OA = OptionApplicative in
-      let f x = OA.pure @@ f x in
-      match p {OA} f x with
-      | Some x  -> x
+      match p {OA} (fun x -> OA.pure (f x)) x with
+      | Some y  -> y
       | None    -> x
 
     let set l x = modify l (const x)
@@ -118,17 +106,13 @@ module I = struct
     let compose (l2 : ('b, 'c) t) (l1 : ('a, 'b) t) : ('a, 'c) t =
       fun { A : Applicative.S} f x -> l1 {A} (l2 {A} f) x
 
-    let (//) l1 l2 = compose l2 l1
+    let (/?) l1 l2 = compose l2 l1
   end
 
+let prism (type a) (type b) (l : (a, b) Lens.t) : (a, b) Prism.t =
+  fun {A : Applicative.S} f x -> l {A} f x
 
-
-  let (//) p1 p2 = Prism.compose p2 p1
-
-  module FunctorApplicative { A : Applicative.S} = struct
-    type 'a t = 'a A.t
-    let map f x = A.apply (A.pure f) x
-  end
+  let (/?) p1 p2 = Prism.compose p2 p1
 
   (**************************************************************
    * Examples
@@ -136,49 +120,46 @@ module I = struct
   type physical_address = { street : string ; number : int}
 
   type address =
-    | Physical of physical_address option
+    | Physical of physical_address
     | Email of string
 
-  type person = { name : string; age : int; address : address }
+  type person = { name : string; age : int; address : address option}
 
   type company = { name : string; ceo : person }
 
   (**************************************************************)
-  let ceo : (company, person) Prism.t = fun { A : Applicative.S } f x ->
-    let module F = FunctorApplicative { A } in
+  let ceo : (company, person) Lens.t = fun { F : Functor.S } f x ->
     F.map (fun ceo -> { x with ceo }) @@ f x.ceo
-
-  let name : (person, string) Prism.t = fun { A : Applicative.S } f x ->
-    let module F = FunctorApplicative { A } in
-    F.map (fun name -> { x with name }) @@ f x.name
 
   let address { F : Functor.S} f x =
     F.map (fun address -> { x with address }) @@ f x.address
-
-  let street { F : Functor.S} f x =
-    F.map (fun street -> { x with street }) @@ f x.street
 
   let some : ('a option, 'a) Prism.t = fun {A : Applicative.S} f x ->
     match x with
     | Some y -> A.apply (A.pure (fun x -> Some x)) (f y)
     | None   -> A.pure None
 
+  let street { F : Functor.S} f x =
+    F.map (fun street -> { x with street }) @@ f x.street
+
   let physical_address {A : Applicative.S} f x =
     match x with
     | Physical p -> A.apply (A.pure (fun pa -> Physical pa)) (f p)
     | Email _    -> A.pure x
 
-  let p = ceo // name
+  let ceo_street =
+    prism ceo /? prism address /? some /? physical_address /? prism street
 
-  let my_company = {
-    name = "Lens Inc";
-    ceo = {
-      name = "Mary";
-      age = 62;
-      address =
-        Physical (Some { street = "Highstreet"; number = 13; })
+  let c =
+    {
+      name = "Lens Inc";
+      ceo =
+        {
+          name = "Mary";
+          age = 54;
+          address = Some (Physical { street = "Highstreet"; number = 13; })
+       }
     }
-  }
 
   let view p = Prism.view p
   let modify p = Prism.modify p
