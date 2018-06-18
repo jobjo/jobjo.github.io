@@ -68,7 +68,7 @@ module I = struct
 
   module Lens = struct
 
-    type ('a, 'b) t = { F : Functor.S } -> ('b -> 'b F.t) -> 'a -> 'a F.t
+    type ('a, 'b) t = {F : Functor.S} -> ('b -> 'b F.t) -> 'a -> 'a F.t
 
     let view (type a) (type b) (l : (a, b) t) (x : a) : b =
       let module C = ConstFunctor (struct type t = b end) in
@@ -81,8 +81,6 @@ module I = struct
 
     let compose (l2 : ('b, 'c) t) (l1 : ('a, 'b) t) : ('a, 'c) t =
       fun { F : Functor.S} f x -> l1 {F} (l2 {F} f) x
-
-    let (//) l1 l2 = compose l2 l1
 
   end
 
@@ -105,12 +103,12 @@ module I = struct
 
     let compose (l2 : ('b, 'c) t) (l1 : ('a, 'b) t) : ('a, 'c) t =
       fun { A : Applicative.S} f x -> l1 {A} (l2 {A} f) x
-
-    let (/?) l1 l2 = compose l2 l1
   end
 
-let prism (type a) (type b) (l : (a, b) Lens.t) : (a, b) Prism.t =
-  fun {A : Applicative.S} f x -> l {A} f x
+  let prism (type a) (type b) (l : (a, b) Lens.t) : (a, b) Prism.t =
+    fun {A : Applicative.S} f x -> l {A} f x
+
+  let (//) p1 p2 = Lens.compose p2 p1
 
   let (/?) p1 p2 = Prism.compose p2 p1
 
@@ -149,6 +147,30 @@ let prism (type a) (type b) (l : (a, b) Lens.t) : (a, b) Prism.t =
 
   let ceo_street =
     prism ceo /? prism address /? some /? physical_address /? prism street
+
+  module IsPrism = struct
+    module type S = sig
+      type ('a, 'b) t
+      val prism : ('a, 'b) t -> ('a, 'b) Prism.t
+    end
+  end
+
+  implicit module PrismIsPrism = struct
+    type ('a, 'b) t = ('a, 'b) Prism.t
+    let prism p = p
+  end
+
+  implicit module LensIsPrism = struct
+    type ('a, 'b) t = ('a, 'b) Lens.t
+    let prism l = prism l
+  end
+
+  let (>>) {P1 : IsPrism.S } { P2 : IsPrism.S } p1 p2 =
+    P1.prism p1 /? P2.prism p2
+
+  let p0 = ceo // address
+
+  let p1 = ceo >> address >> some >> physical_address >> street
 
   let c =
     {
