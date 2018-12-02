@@ -7,7 +7,7 @@ The following is a write-up on an implementation of the [Knuth-Morris-Pratt]
 straight forward but implementing it in a functional style serves as a good
 example of how lazy data structures may be used as an optimization technique.
 
-## The Algorithm
+## The algorithm
 
 [KMP] solves the problem of efficiently searching for occurrences of one
 string within another.
@@ -102,7 +102,7 @@ At each character of the input search string, a step is generated; Unless the
 input string is empty the result is an incomplete state with the `is_match`
 property set to `false`. The step function looks at an incoming character and
 decide to continue to the next step or return to a previous step depending on
-whether the character matches the current character of the pattern or not. 
+whether the character matches the current character of the pattern or not.
 
 The challenge is to figure out how to refer to the previous state. Applying
 the following thought experiment might help; Pretend for a second that an
@@ -134,7 +134,7 @@ just get away by passing a lazy value and be careful not to force its
 evaluation until after it's created.  The `lazy` keyword in OCaml provides
 such a mechanism.
 
-Here is the complete implementation of pattern generation function 
+Here is the complete implementation of pattern generation function
 implementing the described strategy:
 
 {% highlight ocaml %}
@@ -145,15 +145,15 @@ let rec const b = { is_match = b; step = fun _ -> const b }
 
 let generate_pattern (cs: char list) : pattern =
   let rec pattern = lazy (gen pattern cs)
-  and gen curr_pattern = function 
+  and gen curr_pattern = function
     | []                ->
       const true
     | [c]               ->
       mk false @@ fun x ->
         let next_pattern = force curr_pattern in
-        if x = c then 
-          mk true (fun _ -> next_pattern) 
-        else 
+        if x = c then
+          mk true (fun _ -> next_pattern)
+        else
           next_pattern
     | c :: cs           ->
       let next_pattern = lazy (step c @@ force curr_pattern) in
@@ -166,10 +166,10 @@ let generate_pattern (cs: char list) : pattern =
 
 The one line that may stick out is the recursive definition of pattern: `let
 rec pattern = lazy (gen pattern cs)`.  The operator `lazy` creates an
-unevaluated *thunk* which enables forward referencing. 
+unevaluated *thunk* which enables forward referencing.
 
 The function `gen` is the work horse and its parameter `curr_pattern`
-corresponds to `p0` from above, and is a handler to a lazy pattern. 
+corresponds to `p0` from above, and is a handler to a lazy pattern.
 
 The function matches a list of characters constituting the given pattern and
 differentiates between three cases; An empty list is a special case and will
@@ -196,7 +196,7 @@ at least providing an alternative to more imperative approaches such as
 mutable arrays.
 
 Thanks to [Shayne Fletcher] for coming up with the challenge in the first place.
- 
+
 [KMP]:https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm
 [Knuth-Morris-Pratt]:https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm
 [Shayne Fletcher]:http://blog.shaynefletcher.org/
