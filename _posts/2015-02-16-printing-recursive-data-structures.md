@@ -17,7 +17,7 @@ in F#.
 ## The Problem
 To give a motivating example, consider a (simplistic) type for representing XML data:
 
-{% highlight ocaml %}
+```fsharp
 /// Attribute
 type Attribute = string * string
 
@@ -25,7 +25,7 @@ type Attribute = string * string
 type XML =
     | Text of string
     | Node of string * list<Attribute> * list<XML>
-{% endhighlight %}
+```
 
 An `Attribute` is a key-value pair and an `XML` node is either some text or an
 element with attributes and a list of children.
@@ -38,84 +38,84 @@ As a first task we need to decide on a name for the thing we're trying to
 abstract; I call it `Printer`.  At the bare minimum we also need a function for
 evaluating a printer by turning it into a string:
 
-{% highlight ocaml %}
+```fsharp
 /// Executes a printer, producing a string value.
 val run : Printer -> string
-{% endhighlight %}
+```
 
 Let's think about how to produce printers. We should naturally provide a
 function for lifting simple string values:
 
-{% highlight ocaml %}
+```fsharp
 /// Produces a printer that prints a string.
 val print : string -> Printer
-{% endhighlight %}
+```
 
 The interesting part is the ability to achieve nesting or indentation. The most
 intuitive way to express this is via a function that operates on a printer by
 indenting it one level:
 
-{% highlight ocaml %}
+```fsharp
 // Indents a printer one level.
 val indent : Printer -> Printer
-{% endhighlight %}
+```
 
 Finally we need some means for composing printers; One way to achieve
 compositionality is to require that our printer type forms a [monoid] by
 introducing an empty printer along with a binary operator for combining two
 printers:
 
-{% highlight ocaml %}
+```fsharp
 /// Doesn't print anything.
 val empty : Printer
 
 /// Combine two printers.
 val add : Printer -> Printer -> Printer
-{% endhighlight %}
+```
 
 You may wonder what good `empty` brings; One benefit is getting *sequencing* for free, that is the ability to combine a list of printers:
 
-{% highlight ocaml %}
+```fsharp
 /// Sequences a list of printers.
 let sequence : seq<Printer> -> Printer = Seq.fold add empty
-{% endhighlight %}
+```
 
 With the above interface, printing nested documents is straight forward. Here is an example for manually outputting some HTML:
 
-{% highlight ocaml %}
+```fsharp
 let htmlPrinter =
     sequence [
         print "<html>"
-        indent <| 
+        indent <|
             sequence [
                 print "<body>"
-                indent <| 
+                indent <|
                     print "Printed"
                 print "</body>"
             ]
         print "</html>"
     ]
-{% endhighlight %}
+```
 
 With the expectation that running this printer:
 
-{% highlight ocaml %}
-printfn "%s" (run htmlPrinter)   
-{% endhighlight %}
+```fsharp
+printfn "%s" (run htmlPrinter)
+```
 
 produces output similar to:
 
-{% highlight xml %}
+````xml
 <html>
   <body>
     Printed
   </body>
 </html>
-{% endhighlight %}
+```
 
 Here is the complete set of combinators defining the `API`:
 
-{% highlight ocaml %}
+```fsharp
 type Printer
 /// Evaluates a printer.
 val run : Printer -> string
@@ -127,7 +127,7 @@ val indent : Printer -> Printer
 val empty : Printer
 /// Add two printers in a sequence.
 val add : Printer -> Printer -> Printer
-{% endhighlight %}
+```
 
 To ensure that the semantics is intuitive, there are a number of constraints that need to be satisfied by any particular implementation. I've identified the following ones:
 
@@ -148,10 +148,10 @@ This is needed for safely being able to refactor expressions.  Guaranteeing
 `sequence`, for instance by ensuring that the following two printers are
 identical:
 
-{% highlight ocaml %}
+```fsharp
 let pc1 = sequence [ p1; p2; p3 ]
 let pc2 = sequence [p1 ; sequence [p2; p3]]
-{% endhighlight %}
+```
 
 This is exactly why the [monoid] pattern is useful.
 
@@ -165,7 +165,7 @@ there are broadly speaking two implementation strategies available - *Deep* and
 operations; This generally enables more optimization capabilities and also
 makes it possible to provide multiple *interpreters*. In a shallow embedding no
 intermediate data structure is used for building up expression trees, instead
-the semantics of an operation is part of its definition. 
+the semantics of an operation is part of its definition.
 
 Let's start by the simplest possible solution, not worrying about whether to
 support multiple interpreters or not. Applying the principal of [Denotational
@@ -175,9 +175,9 @@ something that has the ability to output a nested structure. Parameterizing
 over the choice of how to print a line given an indentation level, this can be
 represented by the following function:
 
-{% highlight ocaml %}
+```fsharp
     type Printer = (int -> string -> string) -> string
-{% endhighlight %}
+```
 
 In other words a printer is a *black-box* that when applied to a function from
 an indentation level and a string to string, returns a pretty-printed
@@ -189,21 +189,21 @@ in the category of *shallow embeddings*.
 Let's see if the type is sufficient for implementing the interface. Starting
 with `run`:
 
-{% highlight ocaml %}
+```fsharp
 let run (p: Printer) =
     p <| fun n s ->
         let space = String.Join("", List.replicate (n * 2) " ")
         sprintf "%s%s\n" space s
-{% endhighlight %}
+```
 
 `Run` simply invokes the printer with a function that indents each line with
 two spaces per indentation level.
 
 Lifting a string into a printer is also straight forward:
 
-{% highlight ocaml %}
+```fsharp
 let print s = fun ind -> ind 0 s
-{% endhighlight %}
+```
 
 The function turns a string into a printer that invokes the indentation
 argument with level 0.
@@ -211,31 +211,31 @@ argument with level 0.
 To implement `indent` we need to transform a printer into a new one that when
 executed invokes its given indent function with a greater indentation level:
 
-{% highlight ocaml %}
+```fsharp
 let indent p = fun ind -> p (fun n -> ind (n + 1))
-{% endhighlight %}
+```
 
 When it comes to `empty` we're left with little choice but to output an empty
 string:
 
-{% highlight ocaml %}
+```fsharp
 let empty = fun _ -> ""
-{% endhighlight %}
+```
 
 Last one is `add`:
 
-{% highlight ocaml %}
+```fsharp
 let add p1 p2 = fun ind -> p1 ind + p2 ind
-{% endhighlight %}
+```
 
 Which simply runs both printers and concatenates their output.
 
 We further need to ensure that the implementation is compatible with the
-semantical constraints. 
+semantical constraints.
 
 First,  `(print >> run)` must be equivalent with the identity function:
 
-{% highlight ocaml %}
+```fsharp
 (print >> run) s                                                    =
 // Definition of function composition:
 run (print s)                                                       =
@@ -247,12 +247,12 @@ run (fun ind -> ind 0 s)                                            =
 sprintf "%s%s" (space 0) s)                                         =
 // Definition of space and sprintf:
 s
-{% endhighlight %}
+```
 
 What about the [monoid] constraints for `add` and `empty`? Here is a proof for
 left identity (2):
 
-{% highlight ocaml %}
+```fsharp
 add p empty =
 // Definition of add:
 fun ind -> p ind + empty ind                                        =
@@ -263,13 +263,13 @@ fun ind -> p ind + ""                                               =
 // Empty string is identity of string concatenation:
 fun ind -> p ind                                                    =
 p
-{% endhighlight %}
+```
 
 In fact, these properties follow from the [monoid] properties of *string*. The
 proof in the other direction is symmetric. We also need to show that `add` is
 associative:
 
-{% highlight ocaml %}
+```fsharp
 add p1 (add p2 p3)                                                  =
 // Definition of add on the outer argument:
 fun ind -> p1 ind + ((add p2 p3) ind)                               =
@@ -281,15 +281,15 @@ fun ind -> p1 ind + p2 ind + p3 ind                                 =
 fun ind -> (p1 ind + p2 ind) + p3 ind                               =
 /// Definition of add:
 add (add p1 p2) p3
-{% endhighlight %}
+```
 
 
-Again, the proof relies on the associativity of string concatenation.  
+Again, the proof relies on the associativity of string concatenation.
 
 Finally we need to show that `indent` is distributive according to (5). This
 follows directly from the definitions of the two functions:
 
-{% highlight ocaml %}
+```fsharp
 indent (add p1 p2)                                                  =
 // Definition of indent:
 fun ind -> (add p1 p2) (fun n -> ind (n + 1))                       =
@@ -299,14 +299,14 @@ fun ind -> (fun ind -> p1 ind + p2 ind) (fun n -> ind (n + 1))      =
 fun ind -> (p1 (fun n -> ind (n + 1)) + p2 (fun n -> ind (n + 1)))  =
 // Definition of indent:
 add (indent p1) (indent p2)
-{% endhighlight %}
+```
 
 To wrap it up, below is the complete listing of the implementation. I made the
 definition of `Printer` private, added a function for running printers with a
 custom indentation parameter and included operator aliases for `sequence`
 `print`, and `add`:
 
-{% highlight ocaml %}
+```fsharp
 open System
 
 /// A printer is a function from an indentation level to a list of strings.
@@ -338,7 +338,7 @@ let add tp1 tp2 = mkPrinter <| fun ind ->
      tp1.Run ind + tp2.Run ind
 
 /// Concatenates a sequence of printers.
-let sequence = Seq.fold add empty 
+let sequence = Seq.fold add empty
 
 /// Short for sequence.
 let (!<) = sequence
@@ -348,12 +348,12 @@ let (<+>) = add
 
 /// Short for print.
 let (!) = print
-{% endhighlight %}
+```
 
 Returning to the motivational example of printing XML, here is a complete
 implementation of a show function for the `XML` type:
 
-{% highlight ocaml %}
+```fsharp
 /// Attribute
 type Attribute = string * string
 
@@ -364,12 +364,12 @@ type XML =
 
 /// Pretty-prints an xml value.
 let show =
-    let showAttrs attrs = 
+    let showAttrs attrs =
         let showAttr (n,v) = sprintf " %s=%s" n v
         String.Join("", List.map showAttr attrs)
 
     let rec show = function
-        | Text t                -> 
+        | Text t                ->
             !t
         | Node (name,atrs,chs)  ->
             !<[
@@ -378,7 +378,7 @@ let show =
                 !(sprintf "</%s>" name)
             ]
     show >> run
-{% endhighlight %}
+```
 
 Hopefully the example is straight forward to follow. In case you don't like the
 prefix operators, you could change the definition to use `sequence` instead of
@@ -392,19 +392,19 @@ ways of interpreting expressions. Creating a data type for a deep embedding is
 straight forward, we basically just need to list the distinct language
 constructs. The following type will do:
 
-{% highlight ocaml %}
+```fsharp
 // Deep embedding of printer type.
 type Printer =
     | Empty
     | Print of string
     | Indent of Printer
     | Add of Printer * Printer
-{% endhighlight %}
+```
 
 In this way, all operations are trivial. Here are the functions mirroring the
 constructors:
-    
-{% highlight ocaml %}
+
+```fsharp
 // Empty printer.
 let empty = Empty
 
@@ -420,7 +420,7 @@ let add p1 p2 =
     | Empty, p
     | p, Empty  -> p
     | _         -> Add(p1,p2)
-{% endhighlight %}
+```
 
 The only interesting part is `add` which contains an optimization step for
 implementing left and right identity for `empty` in accordance with the
@@ -428,7 +428,7 @@ specified semantics. All the work of evaluating a printer is pushed to the
 interpretors, in our case a function for constructing a string. Here are the
 equivalent `runWith` and `run` functions:
 
-{% highlight ocaml %}
+```fsharp
 // Executes a printer.
 let runWith ind p =
     let sb = new Text.StringBuilder()
@@ -442,7 +442,7 @@ let runWith ind p =
 
 /// Runs a printer returning a string.
 let run = runWith <| fun n -> sprintf "%s%s\n" (space n)
-{% endhighlight %}
+```
 
 Each language construct is handled separately with `Indent` and `Add`
 traversing their arguments recursively. A `Text.StringBuilder` object is used
@@ -470,14 +470,14 @@ how values are constructed. One solution would be to expose the core
 definitions in a separate module.
 
 Using equational reasoning is slightly more complicated given the imperative
-style of the `runWith` function. The complete proofs are left as an exercise. 
+style of the `runWith` function. The complete proofs are left as an exercise.
 
 Another approach is to provide a mapping from the deep to the shallow
 embedding. Assuming a module `ShallowPrinter` containing the shallow
 implementation from above, here is a function for performing the translation
 along with `runWith` function:
 
-{% highlight ocaml %}
+```fsharp
 module SP = ShallowPrinter
 
 /// Transforms a deep printer to a shallow one.
@@ -492,14 +492,14 @@ let runWith ind = toShallow >> SP.runWith ind
 
 /// Runs a printer returning a string.
 let run =  runWith <| fun n -> sprintf "%s%s\n" (space n)
-{% endhighlight %}
+```
 
 Now, all proofs concerning the shallow implementation can be safely reused in
 order to show that the constraints are fulfilled for this definition of run.
- 
+
 Here is the a complete listing of a stand-alone deep embedding:
 
-{% highlight ocaml %}
+```fsharp
 open System
 
 // Deep embedding of printer type.
@@ -534,7 +534,7 @@ let runWith ind p =
     let rec go n = function
         | Empty         ->
             ()
-        | Print l        -> 
+        | Print l        ->
             ignore <| sb.AppendLine (ind n l)
         | Indent p      ->
             go (n+1) p
@@ -558,13 +558,13 @@ let (<+>) = add
 
 /// Short for print.
 let (!) = print
-{% endhighlight %}
+```
 
 At last, to illustrate that it is in fact possible to define alternative interpretors
 of printer expressions, consider the following example that given a printer,
 generates F# code for printing the expression itself:
 
-{% highlight ocaml %}
+```fsharp
 let showFSharp : Printer -> string =
     let rec show = function
         | Empty         ->
@@ -586,20 +586,20 @@ let showFSharp : Printer -> string =
                 !")"
             ]
     show >> run
-{% endhighlight %}
+```
 
 Using this function on the initial `htmlPrinter`  example, we actually retrieve
 and equivalent F# expression for recreating the printer:
 
-{% highlight ocaml %}
+```fsharp
 // Define a custom printer.
 let htmlPrinter =
     sequence [
         print "<html>"
-        indent <| 
+        indent <|
             sequence [
                 print "<body>"
-                indent <| 
+                indent <|
                     print "Printed"
                 print "</body>"
             ]
@@ -607,11 +607,11 @@ let htmlPrinter =
     ]
 
 printfn "%s" (showFSharp htmlPrinter)
-{% endhighlight %}
+```
 
 Yielding the output:
 
-{% highlight ocaml %}
+```fsharp
 Add (
   Add (
     Print "<html>"
@@ -633,7 +633,7 @@ Add (
   ,
   Print "</html>"
 )
-{% endhighlight %}
+```
 Which indeed valid F#. This would not have been possible using the shallow embedding.
 
 ## Summary
@@ -652,18 +652,3 @@ the semantical constraints were satisfied.
 [monoid]: http://en.wikipedia.org/wiki/Monoid
 [monoids]: http://en.wikipedia.org/wiki/Monoid
 [functor]: http://en.wikipedia.org/wiki/Functor
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

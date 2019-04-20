@@ -8,12 +8,12 @@ Using immutable data structures enables equational reasoning and assures that up
 ## Building a Player Service
 Consider the task of designing a service for managing player information for some online game. The core API needs to support methods for retrieving and updating a set of players given some search criterion; Here is simple interface capturing the requirements:
 
-{% highlight ocaml %}
+```ocaml
 type PlayerService = {
     FindPlayers : SearchConfiguration -> list<Player>
     UpdatePlayers : SearchConfiguration -> (Player -> Player) -> unit
 }
-{% endhighlight %}
+```
 
 More specific operations such as adding or removing player credits can be implemented in terms of `UpdatePlayers` and potentially exposed via a web-service API.
 
@@ -34,19 +34,19 @@ What is a good data-structure for this problem? It may seem intuitive to pick a 
 ## An immutable version
 Rather than addressing these problems in a mutable setting, let's start by designing a pure interface with the hope of later being able to convert it to a mutable version:
 
-{% highlight ocaml %}
-type PlayerServicePure = 
+```ocaml
+type PlayerServicePure =
     {
         FindPlayers : SearchConfiguration -> list<Player>
         UpdatePlayers : SearchConfiguration -> (Player -> Player) -> PlayerServicPure
     }
-{% endhighlight %}
+```
 
-The only difference from the previous API is that `UpdatePlayers` now returns the next state of the service. 
+The only difference from the previous API is that `UpdatePlayers` now returns the next state of the service.
 
 The following example uses a standard FSharp *Map* for storing players. Simplistic definitions of `SearchConfiguration` and `Player` are also provided:
 
-{% highlight ocaml %}
+```ocaml
 // Represent a player.
 type Player = {Name : string ; Credit : int }
 
@@ -56,14 +56,14 @@ type SearchConfiguration = { Names : list<string> }
 // This is the pure interface for a player-service.
 type PlayerServicePure = {
     FindPlayers : SearchConfiguration -> list<Player>
-    UpdatePlayers : SearchConfiguration -> (Player -> Player) ->PlayerServicePure 
+    UpdatePlayers : SearchConfiguration -> (Player -> Player) ->PlayerServicePure
 }
 
 // Builds a service object given a set of players.
 let buildPlayerServicePure players =
-    let rec build playerMap =        
+    let rec build playerMap =
         {
-             FindPlayers = fun sc -> 
+             FindPlayers = fun sc ->
                 sc.Names
                 |> List.choose (fun name -> Map.tryFind name playerMap)
              UpdatePlayers = fun sc f ->
@@ -71,19 +71,19 @@ let buildPlayerServicePure players =
                 ||> Seq.fold (fun pMap name ->
                    match Map.tryFind name pMap with
                    | Some p -> Map.add name (f p) pMap
-                   | None   -> pMap 
+                   | None   -> pMap
                 )
                 |> build
         }
-    players 
+    players
     |> List.map (fun name -> (name, {Name = name; Credit = 0}))
     |> Map.ofSeq
-    |> build     
-{% endhighlight %}
+    |> build
+```
 
 Given a sequence of players, `buildPlayersService` constructs a service object. Here are some examples of how to program with the immutable service:
 
-{% highlight ocaml %}
+```ocaml
 // Build a new service
 let service = buildPlayerServicePure ["John"; "Jane"; "James"]
 
@@ -91,10 +91,10 @@ let service = buildPlayerServicePure ["John"; "Jane"; "James"]
 let johns = service.FindPlayers ({Names = ["John"]})
 
 // New service with richer Johns
-let service = service.UpdatePlayers {Names = ["John"]} <| fun p -> 
+let service = service.UpdatePlayers {Names = ["John"]} <| fun p ->
     {p with Credit = p.Credit + 100}
 
-{% endhighlight %}
+```
 
 Update operations are atomic by definition since the only way of noticing the effect of an update is via the next service state returned by `UpdatePlayers`. Any other problems requiring locking or synchronization do not apply.
 
@@ -104,7 +104,7 @@ Designing and reasoning about the pure implementation is straight forward but we
 ## Deriving a service wrapper
 To implement the original interface we wish to define a transformation from values of `PlayerServicePure` to `PlayerService` values also satisfying the constraints given above. The strategy is to capture the latest state of the service by a mutable reference and replace it with newer versions as update operations are processed. Here is an initial attempt:
 
-{% highlight ocaml %}
+```ocaml
 let buildService players =
     let service = ref buildPlayerServiceIM players
     {
@@ -112,14 +112,14 @@ let buildService players =
         UpdatePlayers = fun sc ->
             service := service.Value.UpdatePlayers sc
     }
-{% endhighlight %}
+```
 
 `FindPlayers` always returns the values of the current service object. The problem with this implementation is the definition of `UpdatePlayers`. If a second invocation of the function is performed before the first update operation terminates, the updates will be applied to the same service object and the first one to terminate will be discarded. This violates constraint (1).
 
 To accommodate for this we must synchronize the updates so that subsequent operations will be placed in a queue in case the service is currently updating.
 There is already built in support for this in F# via the `MailBoxProccing` library providing message passing capabilities between concurrent computations.Here is the extended version based on a `MailBox` process:
 
-{% highlight ocaml %}
+```ocaml
 let buildPlayerService players =
     let service = ref <| buildPlayerServicePure players
     let updateProc = MailboxProcessor.Start <| fun inbox ->
@@ -136,17 +136,17 @@ let buildPlayerService players =
         UpdatePlayers = fun sc f ->
             updateProc.Post (sc,f)
     }
-{% endhighlight %}
+```
 
 Incoming update requests are now processed one at the time since the recursive call to loop is performed first after an update operation is completed. This addresses constraint number (1). All updates are processed within an asynchronous computation which ensures that invocations of `FindPlayers` are not blocked, satisfying constraint (2). FindPlayers is non-blocking in accordance with (3). Thanks to the immutable underlying structure we are also guaranteed to always fetch player data from a consistent state as required by constraint (4).
 
 Following is an example of programming with the interface:
 
-{% highlight ocaml %}
+```ocaml
 // Build the service
 let service =
-    buildPlayerService [ "John" ; "Jane" ; "James" ] 
-    
+    buildPlayerService [ "John" ; "Jane" ; "James" ]
+
 // Extracts credit from player with the given name.
 let checkCredit name =
     match service.FindPlayers {Names = [name]} with
@@ -155,13 +155,13 @@ let checkCredit name =
 
 // Slowly adds some credit to a player.
 let addCredit name amount =
-    service.UpdatePlayers {Names = [name]} <| fun player -> 
+    service.UpdatePlayers {Names = [name]} <| fun player ->
         System.Threading.Thread.Sleep 200
         {player with Credit = player.Credit + amount}
 
 // Runs 10 async computations each adding 1 credit to John 100 times.
 // Total number of credits once completed should be 1000.
-List.init 10 (fun _ -> 
+List.init 10 (fun _ ->
     async {
         List.replicate 100 1
         |> List.iter (addCredit "John")
@@ -181,11 +181,11 @@ let rec trackJohn () =
     }
 trackJohn ()
 |> Async.Start
-{% endhighlight %}
+```
 
 The `addCredit` function is deliberately made slower in order to test that the implementation can handle queued update operations. Ten *async computations* each invoking `addCredit` 100 times, increasing the amount of credit for the player *John*. In the meanwhile another thread repeatedly reports the current credit status. Here is some output of running the program:
 
-{% highlight ocaml %}
+```ocaml
 Current credit for John is 48
 Current credit for John is 95
 ...
@@ -194,7 +194,7 @@ Current credit for John is 967
 Current credit for John is 1000
 Current credit for John is 1000
 Current credit for John is 1000
-{% endhighlight %}
+```
 
 As seen, all update operations were accounted for. That's not a guarantee but at least an indication that the implementation is sound.
 

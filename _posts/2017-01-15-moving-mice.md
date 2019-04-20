@@ -3,9 +3,9 @@ layout: post
 title: The mice moving challenge
 ---
 
-A few weeks ago I came across a logic puzzle handed out as a *holiday challenge*. 
-I didn't solve it by hand but instead turned to *Haskell* for some help. As it proved to be a fun 
-exercise I decided to pass it on and invited some friends to 
+A few weeks ago I came across a logic puzzle handed out as a *holiday challenge*.
+I didn't solve it by hand but instead turned to *Haskell* for some help. As it proved to be a fun
+exercise I decided to pass it on and invited some friends to
 contribute with solutions in a language of their choice. I here present
 the given puzzle along with the set of submissions received.
 
@@ -13,39 +13,39 @@ the given puzzle along with the set of submissions received.
 There are two types of mice, left leaning (`<`) and right leaning (`>`).
 Six mice are initially arranged on seven slots in the following configuration:
 
-{% highlight haskell %}
+```haskell
 [>,>,>,_,<,<,<]
-{% endhighlight %}
+```
 
-The empty slot is indicated by `_` and the task is to move all 
+The empty slot is indicated by `_` and the task is to move all
 mice on the left to the right and all mice on the right to the
 left, as in:
 
-{% highlight haskell %}
+```haskell
 [<,<,<,_,>,>,>]
-{% endhighlight %}
+```
 
 The rules are simple:
 
 1. A right leaning mouse (`>`) can only move to the right.
-2. A left leaning mouse (`<`) can only move to the left.  
-3. A mouse can either move one step forward (left/right) to fill an empty slot 
-or jump over any other mouse (left or right leaning) to occupy an empty slot.  
+2. A left leaning mouse (`<`) can only move to the left.
+3. A mouse can either move one step forward (left/right) to fill an empty slot
+or jump over any other mouse (left or right leaning) to occupy an empty slot.
 
 From the initial configuration:
 
-{% highlight haskell %}
+```haskell
 [>,>,>,_,<,<,<]
-{% endhighlight %}
+```
 
 the following set of moves are therefore allowed:
 
-{% highlight haskell %}
+```haskell
 [>,>,_,>,<,<,<] - Move right leaning mouse one step forward.
 [>,>,>,<,_,<,<] - Move left leaning mouse one step forward.
 [>,_,>,>,<,<,<] - Jump over one mouse from the left.
 [>,>,>,<,<,_,<] - Jump over one mouse from the right.
-{% endhighlight %}
+```
 
 Is it possible to perform a sequence of moves to solve the task and
 can you write a short program to prove it?
@@ -54,7 +54,7 @@ can you write a short program to prove it?
 
 First out, an *OCaml* program written by Anton T:
 
-{% highlight ocaml %}
+```ocaml
 
 type place = L | R | E
 
@@ -71,7 +71,7 @@ let search state moves final =
       | None -> loops xs trace in
   loop state []
 
-let init = [R; R; R; E; L; L; L]  
+let init = [R; R; R; E; L; L; L]
 let final = function [L; L; L; E; R; R; R] -> true | _ -> false
 
 let anywhere s f =
@@ -81,7 +81,7 @@ let anywhere s f =
     | None, x :: xs -> loop (x :: acc) xs
     | _ -> None in
   loop [] s
-  
+
 let move_r s = anywhere s (function R :: E :: x -> Some (E :: R :: x) | _ -> None)
 
 let move_l s = anywhere s ( function E :: L :: x -> Some (L :: E :: x) | _ -> None)
@@ -92,16 +92,16 @@ let all_moves = [move_r; move_l; jump_r; jump_l]
 let list_of_opt = function None -> [] | Some x -> [x]
 let choose f xs = List.concat (List.map (fun x -> list_of_opt (f x)) xs)
 let moves s = choose (fun m -> m s) all_moves
-let solution = search init moves final  
+let solution = search init moves final
 
-{% endhighlight %}
+```
 
 Perhaps most interesting here is the `anywhere` function which abstracts
 the recursive pattern and allows for non-recursive definitions of *rules*.
 
 The next one is from Gyorgy F. who submitted the following *Clojure* code:
 
-{% highlight clojure %}
+```clojure
 (ns joel-challenge.core
   (:gen-class))
 
@@ -159,7 +159,7 @@ The next one is from Gyorgy F. who submitted the following *Clojure* code:
             (generate-move-tree child))]
       (when position
         {:position position :children (remove nil? results)}))))
-	
+
 (defn solutions [init target]
   (let [{:keys [:position :children]}
         (-> init
@@ -184,7 +184,7 @@ The next one is from Gyorgy F. who submitted the following *Clojure* code:
           (if (= (:position node) target)
             (into results [path])
             results))))))
-	    
+
 (defn print-solutions [init target]
   (doseq [solution (solutions init target)]
     (println "----------------------")
@@ -194,15 +194,15 @@ The next one is from Gyorgy F. who submitted the following *Clojure* code:
 (defn -main
   [& args]
   (print-solutions initial-position target-position))
-{% endhighlight %}
+```
 
 Here, a tree structure is built up where a node corresponds
-to a configuration (arrangement of mice) and its children to 
+to a configuration (arrangement of mice) and its children to
 all states reachable by making one feasible move.
 
 Over to Haskell, Niclas B. contributed with this program:
 
-{% highlight haskell %}
+```haskell
 import Data.Maybe
 
 data Mice = L | R deriving (Eq)
@@ -234,9 +234,9 @@ goalConfig = Config [L,L,L] [R,R,R]
 initConfig = Config [R,R,R] [L,L,L]
 
 seqToGoal :: Config -> [[Config]] -> [[Config]]
-seqToGoal c ms 
+seqToGoal c ms
 	| c == goalConfig = [c]:ms
-	| m == [] = []           
+	| m == [] = []
 	| otherwise = (map (\p -> concat (seqToGoal p ([c]:ms))) m)
   where
    m = possibleMoves c
@@ -247,16 +247,16 @@ main = mapM_ print sequence
     sequence = reverse (firstSolution)
     firstSolution = head (seqToGoal (initConfig) [])
 
-{% endhighlight %}
+```
 
 What sticks out to me is how the configuration is represented by two lists
-rather than one.  This allows for concise rule definitions (`possibleMoves`). 
+rather than one.  This allows for concise rule definitions (`possibleMoves`).
 Note that the first list of a configuration is in reverse order.
 
-Sebastian O. first submitted a hand crafted solution but then also brought 
+Sebastian O. first submitted a hand crafted solution but then also brought
 some C# to the table:
 
-{% highlight csharp %}
+```csharp
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -438,7 +438,7 @@ namespace ChristmasLeaning
     }
 }
 
-{% endhighlight %}
+```
 
 What's notable here (besides the number of lines :)) is how well it reads.
 It is utilizing the position of the empty slot for defining the set of feasible moves
@@ -446,7 +446,7 @@ without traversing the configuration list.
 
 Next up is Daniel W. with some *FSharp*:
 
-{% highlight ocaml %}
+```ocaml
 
 module MarchingMice
 
@@ -491,14 +491,14 @@ let startLineUp = (R::R::R::[], L::L::L::[])
 //let startLineUp = (R::L::[], R::L::[])
 
 [<EntryPoint>]
-let main argv = 
+let main argv =
   display 0 startLineUp
   Console.ReadLine() |> ignore
   marchMice 1 Rightwards startLineUp |> ignore
   Console.ReadLine() |> ignore
   0 // return an integer exit code
 
-{% endhighlight %}
+```
 
 Daniel also appearantly managed to solve the problem without turning to computers
 and the program is codifying a strategy rather than searching and backtracking
@@ -506,7 +506,7 @@ for solutions.
 
 Oszkar J. then submitted the follwoing version in *JavaScript*:
 
-{% highlight javascript %}
+```javascript
 const init = ['>', '>', '>', '_', '<', '<', '<']
 const goal = ['<', '<', '<', '_', '>', '>', '>']
 
@@ -553,16 +553,16 @@ const search = (state, depth = 50) => {
       }, { score: -Infinity })
   }
 }
-{% endhighlight %}
+```
 
 Note the clever way of accumulating the neighbouring states by folding over
-a configuration array in the `nexts` function. Also striking how seemingly 
-functional *JavaScript* has become, particularly with the addition of `const` and `=>` 
+a configuration array in the `nexts` function. Also striking how seemingly
+functional *JavaScript* has become, particularly with the addition of `const` and `=>`
 keywords (these were both new to me).
 
 Tamas K. further added on to diversity by submitting the these lines of *R*:
 
-{% highlight r %}
+```highlight r
 require(rlist)
 
 start <- c("R","R","R","E","L","L","L")
@@ -590,19 +590,19 @@ find <- function(input){
 }
 
 find(step(moves(start)))
-{% endhighlight %}
+```
 
 Another very concise program! Similar to Sebastian's approach in how it's
-using the position of the empty slot in the `moves` function. The program does 
+using the position of the empty slot in the `moves` function. The program does
 not preserve the configuration states however.
 
 Finally, here's the (Haskell) code I ended up writing myself:
 
-{% highlight haskell %}
+```haskell
 import qualified Data.Maybe as M
 
 data Slot   = R | L | E deriving Eq
-type State  = [Slot] 
+type State  = [Slot]
 
 instance Show Slot where
     show R = ">"
@@ -613,7 +613,7 @@ moveRight :: State -> [State]
 moveRight []                = []
 moveRight (R : E : sts)     = [E : R : sts]
 moveRight (R : L : E : sts) = [E : L : R : sts]
-moveRight (R : R : E : sts) = [E : R : R : sts, R : E : R : sts] 
+moveRight (R : R : E : sts) = [E : R : R : sts, R : E : R : sts]
 moveRight (st : sts)        = [st : sts' | sts' <- moveRight sts]
 
 moveLeft :: State -> [State]
@@ -631,7 +631,7 @@ solutions :: State -> Maybe [State]
 solutions st
   | st == [L, L, L, E, R, R, R] =
     Just [st]
-  | otherwise = 
+  | otherwise =
     M.listToMaybe [ st : sts | Just sts <- map solutions $ moves st]
 
 main :: IO ()
@@ -639,7 +639,7 @@ main = do
   case solutions [R,R,R,E,L,L,L] of
     Nothing   -> putStrLn "No solutions"
     Just ss   -> mapM_ print ss
-{% endhighlight %}
+```
 
 ### Conclusion
 The exercise is relatively straight forward and can be tackled
@@ -647,10 +647,10 @@ by a backtracking algorithm exploring the full configuration space. Most submiss
 from above are implementations of this algorithm. The variety stems
 from how a configuration is represented and the encoding of feasible moves.
 
-As for the actual solution to the puzzle itself, here's a sequence of 
+As for the actual solution to the puzzle itself, here's a sequence of
 moves leading up to the final configuration:
 
-{% highlight haskell %}
+```haskell
 [>,>,>,_,<,<,<]
 [>,>,>,<,_,<,<]
 [>,>,_,<,>,<,<]
@@ -667,6 +667,6 @@ moves leading up to the final configuration:
 [<,<,>,<,_,>,>]
 [<,<,_,<,>,>,>]
 [<,<,<,_,>,>,>]
-{% endhighlight %}
+```
 
 Thanks to everyone who participated!

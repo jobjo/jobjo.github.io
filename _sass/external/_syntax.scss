@@ -1,25 +1,24 @@
 
-/* 
+/*
   Darkly Pygments Theme
   (c) 2014 Sourcey
   http://sourcey.com
 */
 
 .highlight {
-  white-space: pre; 
-  overflow: auto; 
+  white-space: pre;
+  overflow: auto;
   word-wrap: normal; /* horizontal scrolling */
-  -moz-border-radius: 3px; 
-  -webkit-border-radius: 3px; 
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
   border-radius: 5px;
   padding: 0.5em;
   background: #002b36;
   color: #C1C2C3;
-  margin-top : 1em;
-  margin-bottom : 1em;
-  font-size : 0.95em;
-  letter-spacing: 0.0325em;
-  weight : normal;
+  margin-top : 0em;
+  margin-bottom : 0em;
+  font-size : 0.9em;
+  letter-spacing: 0.0425em;
 }
 .highlight .hll { background-color: #ffc; }
 .highlight .gd { color: #2e3436; background-color: #0e1416; }
@@ -46,10 +45,22 @@
 .highlight .nv {color : rgb(245,245,195)}
 .highlight .n {color : rgb(245,245,245)}
 .highlight .s {color : rgb(215,157,133)}
-.highlight .c1 {color : #96C71D} 
+.highlight .c1 {color : #96C71D}
 .highlight .sd {color : #96C71D}
 
 
 .highlight pre code  {
-  font-family : 'Droid Sans Mono',consolas,monospace;
+  // font-family : 'Droid Sans Mono',consolas,monospace;
+  font-family : Mono-Regular,Menlo,Monaco,ConSFsolas,Liberation Mono,Courier New,monospace
+}
+
+figure.highlight {
+  margin-top : 0.5em;
+  margin-bottom : 0.5em;
+}
+.highlighter-rouge {
+  margin-top : 1em;
+  margin-bottom : 1em;
+  line-height:  1.1em;
+
 }

@@ -39,9 +39,9 @@ Here are the notes based on the slides. The last section contains a few exercise
 
 If OO and FP both are claiming that they solve the same problems important to all software engineers, why neither of them does?
 
-* There is no uniform accepted definition of object-orientation 
+* There is no uniform accepted definition of object-orientation
 * The two might be orthogonal (Scala) and even cross-definable (Martin Odersky and Dotty)
-* In contrast FP is ill defined, but there is a uniform theory. 
+* In contrast FP is ill defined, but there is a uniform theory.
 
 #### Ancient history
 
@@ -62,7 +62,7 @@ The theory of functional programming is a byproduct of the quest for the foundat
 
 ## Functions
 
-#### Properties of functions 
+#### Properties of functions
 
 We speak of functions in a mathematical sense, it is an unequivocal mapping.
 
@@ -74,21 +74,21 @@ We speak of functions in a mathematical sense, it is an unequivocal mapping.
 
 #### $$\lambda$$-calculus
 
-- Variables:  $$x,y...\in Var \subset Term$$ 
+- Variables:  $$x,y...\in Var \subset Term$$
 - Abstraction: $$ x \in Var$$ and $$M \in Term$$ then $$\lambda x.M \in Term$$
-- Application: $$ M \in Term$$ and $$N \in Term$$ then $$M N \in Term$$ 
+- Application: $$ M \in Term$$ and $$N \in Term$$ then $$M N \in Term$$
 
 Associated with the following set of rules:
 
 * $$\alpha$$-reduction, renaming: $$ MxN \rightarrow^{\alpha} MyN $$
 * $$\beta$$-reduction: $$\lambda x.y z \rightarrow^{\beta} y$$ $$\langle x/z \rangle$$
-* $$\eta$$-reduction: $$\lambda x.Mx \rightarrow^{\eta} M $$ 
+* $$\eta$$-reduction: $$\lambda x.Mx \rightarrow^{\eta} M $$
 
 
 ### Functions in F\#
 
 
-{% highlight fsharp %}
+```fsharp
 // Constant
 let answer = 42
 
@@ -103,13 +103,13 @@ let concat fun s1 -> fun s2 -> s1 + " " + s2
 
 // Equivalent
 let concat' s1 s2 = s1 + " " + s2
-{% endhighlight %}
+```
 
 
 In case no type annotations are given the F# compiler infers the type.
 Definitions can also have explicity type annotations:
 
-{% highlight fsharp %}
+```fsharp
 
 let answer : int = 42
 
@@ -117,61 +117,61 @@ let addTwo (x: int) = x + 2
 
 let concat (s1: string) s2 : string = s1 + " " +  s2
 
-{% endhighlight %}
+```
 
 #### Recursion
-    
 
-    
-{% highlight fsharp %}
+
+
+```fsharp
 // Example
 factorial 4 = 4 * 3 * 2 * 1
-{% endhighlight %}    
+```
 
-{% highlight fsharp %}
+```fsharp
 // Recursion
 let rec factorial n =
-    if n <= 0 then 
+    if n <= 0 then
         1
     else
         n * (factorial (n - 1))
-{% endhighlight %}
+```
 
 Mutual recursion is defined by `let rec .. and`:
-{% highlight fsharp %}
-let rec isEven n = 
-    if n < 0 then 
-        isEven -n 
+```fsharp
+let rec isEven n =
+    if n < 0 then
+        isEven -n
     elif n = 0 then
         true
-    else 
+    else
         isOdd (n - 1)
-and isOdd n = 
-    if n = 0 then 
-        false 
-    else 
+and isOdd n =
+    if n = 0 then
+        false
+    else
         isEven (n - 1)
-{% endhighlight %}
+```
 
 #### Function composition
 
-{% highlight fsharp %}
+```fsharp
 let isEven (n: int) : bool = n % 2 = 0
 
 let length (s: string) : int = s.Length
 
 let hasEvenLength = length >> isEven
-{% endhighlight %}
+```
 
-{% highlight fsharp %}
+```fsharp
 let compose (f: 'B -> 'C) (g: 'A -> 'B) : 'A -> 'C = fun x -> f (g x)
 
 let (<<) = compose
 
 let (>>) g f = compose f g
-{% endhighlight %}
+```
 
-{% highlight fsharp %}    
+```fsharp
 let isEven (n: int) : bool = n % 2 = 0
 
 let length (s: string) : int = s.Length
@@ -179,23 +179,23 @@ let length (s: string) : int = s.Length
 let trim (s: string) : string = s.Trim()
 
 let hasEvenNumChars = trim >> length >> isEven
-{% endhighlight %}
+```
 
 
 #### Associativity
-{% highlight fsharp %}
+```fsharp
 let hasEvenNumChars1 = trim >> (length >> isEven)
 let hasEvenNumChars2 = (trim >> length) >> isEven
-{% endhighlight %}
+```
 
 Is (>>) associative?
-{% highlight fsharp %}
+```fsharp
 (f >> g) >> h                               =
-// Definition of (>>)                       
+// Definition of (>>)
 (fun x -> g (f x)) >> h                     =
-// Definition of (>>)                       
+// Definition of (>>)
 (fun y -> h ((fun x -> g (f x) y)           =
-// Beta reduction                           
+// Beta reduction
 (fun y -> h (g (f y)))                      =
 
 f >> (g >> h)                               =
@@ -207,7 +207,7 @@ fun x -> (fun y -> h (g y)) (f x)           =
 fun x -> h (g (f x))                        =
 // Alpha conversion
 fun y -> h (g (f y))                        =
-{% endhighlight %}
+```
 
 
 ## Categories
@@ -218,7 +218,7 @@ A category $$\mathcal{C}$$ is defined as:
 2. A set of arrows, $$Arr(\mathcal{C})$$ with functions  $$Dom,Codom  \in Arr(\mathcal{C}) \rightarrow Ob(\mathcal{C})$$
 
 
-* Operation $$\circ \in Arr(C) \times Arr(C) \rightarrow Arr(C)$$, s.t. $$\forall f,g \in Arr(C)$$ with $$Codom(f) = Dom(g)$$, $$\exists g \circ f$$ and $$Dom(g \circ f) = Dom(f)$$ and $$Codom(g \circ f) = Codom(g)$$ 
+* Operation $$\circ \in Arr(C) \times Arr(C) \rightarrow Arr(C)$$, s.t. $$\forall f,g \in Arr(C)$$ with $$Codom(f) = Dom(g)$$, $$\exists g \circ f$$ and $$Dom(g \circ f) = Dom(f)$$ and $$Codom(g \circ f) = Codom(g)$$
 
 * Associativivity: $$(g \circ f) \circ h = g \circ (f \circ h)$$
 
@@ -229,15 +229,15 @@ A category $$\mathcal{C}$$ is defined as:
 ![Category](img/category.png)
 
 #### The Category of data and functions
-{% highlight fsharp %}
+```fsharp
 // Composition operator
 let (<<) f g = fun x -> f (g (x))
 
 // Identity
 let id (x: 'T) : 'T = x
-{% endhighlight %}
+```
 
-{% highlight fsharp %}
+```fsharp
 // Associativity
 (f >> g) >> h = f >> (g >> h)
 
@@ -246,7 +246,7 @@ f >> id = f
 
 // Right identity
 id >> g = g
-{% endhighlight %}
+```
 
 
 ## Types
@@ -269,23 +269,23 @@ id >> g = g
 
 - Types are not labels on memory cells, they are not merely
     assuring absence of segmentation faults, but are essential tools
-    within the compilers to check correctness. 
+    within the compilers to check correctness.
 
 ### Types in F\#
 Built in:
-{% highlight fsharp %}
+```fsharp
 int, bool, char, unit, float, string
-{% endhighlight %}
+```
 
 #### Products:
-{% highlight fsharp %}
+```fsharp
 // Tuples
 let myTuple : (int * string * bool) = (42, "The answer", true)
-{% endhighlight %}
+```
 
-{% highlight fsharp %}
+```fsharp
 // Records
-type Person = 
+type Person =
     {
         Name : string
         Email : string
@@ -300,18 +300,18 @@ let gaborEmail = gabor.Email
 
 // Record modification.
 let olderGabor = {gabor with Age = 46}
-{% endhighlight %}
+```
 
 
 #### Sum types (Co-products)
-{% highlight fsharp %}
+```fsharp
 type Dice = | One | Two | Three | Four | Five | Six
-    
+
 let randomDice = Five
-{% endhighlight %}
+```
 
 
-{% highlight fsharp %}
+```fsharp
 
 /// Union type with arguments.
 type Contact =
@@ -320,9 +320,9 @@ type Contact =
     | Address of Address
 
 let contact = Email "gabor@foobar.com"
-{% endhighlight %}
+```
 
-{% highlight fsharp %}
+```fsharp
 
 // Parameterized
 type Option<'T> =
@@ -332,14 +332,14 @@ type Option<'T> =
 let someInt : Option<int> = Some 42
 
 let nothing : Option<string> = None
-{% endhighlight %}
+```
 
 Product types in category theory
-	
+
 ![Category](img/product.png)
 
 ## Pattern matching
-{% highlight fsharp %}   
+```fsharp
 type Address = {Street : string; Number : int; Zip : string}
 
 type Contact =
@@ -353,11 +353,11 @@ let printContact (contact: Contact) =
     | Phone f    -> printfn "Phone: %s" f
     | Address ad -> printfn "Adress: %s %A %s" ad.Street ad.Number ad.Zip
 
-{% endhighlight %}
+```
 
 ## Recursive data structures
 Example - representing boolean expressions
-{% highlight fsharp %}
+```fsharp
 type Exp =
     | True
     | False
@@ -366,8 +366,8 @@ type Exp =
     | Or of Exp * Exp
 
 let example = And (Not (Or (False,True)), True)
-{% endhighlight %}
-{% highlight fsharp %}
+```
+```fsharp
 
 let rec eval exp =
     match exp with
@@ -376,11 +376,11 @@ let rec eval exp =
     | Not e         -> not (eval e)
     | And (e1,e2)   -> (eval e1) && (eval e2)
     | Or (e1,e2)    -> (eval e1) || (eval e2)
-{% endhighlight %}
+```
 
 
 Example - Representing natural numbers using sum types:
-{% highlight fsharp %}
+```fsharp
 type Nat =
     | Zero
     | Succ of Nat
@@ -400,10 +400,10 @@ let five = two <+> three
 
 // Exercise
 let toInt (n: Nat) : int = ??
-{% endhighlight %}
+```
 
 Representing lists:
-{% highlight fsharp %}
+```fsharp
 type List<'T> =
     | Nil
     | Cons of ('T * List<'T>)
@@ -411,10 +411,10 @@ type List<'T> =
 [] = Nil
 (::) x xs = Cons(x,xs)
 [a,b,c,d] = a :: b :: c :: d :: []
-{% endhighlight %}
+```
 
 Constructing lists
-{% highlight fsharp %}
+```fsharp
 let primes = [1; 2; 3; 5; 7; 11; 13]
 
 let persons = [
@@ -422,10 +422,10 @@ let persons = [
     {Name = "Sally"; Email = "sally@foobar.com"; Age = 25}
     {Name = "Attila"; Email = "attila@foobar.com"; Age = 31}
 ]
-{% endhighlight %}
+```
 
 Pattern matching lists:
-{% highlight fsharp %}
+```fsharp
 
 let isEmpty xs =
     match xs with
@@ -436,9 +436,9 @@ let rec containsGabor (ps: list<Person>) : bool =
     match ps with
     | []        -> false
     | p :: ps   -> p.Name = "Gabor" || containsGabor ps
-{% endhighlight %}
+```
 
-  
+
 ## Exercises
 
 #### Natural numbers
@@ -446,36 +446,36 @@ Given the definition of `Nat` for representing natural numbers,
 define two functions `toNat` and `fromNat` that proves that positive
 integers are isomorphic `Nat`.
 
-{% highlight fsharp %}
+```fsharp
 let fromNat (n: Nat) : int = ??
 let toNat (n: int) : Nat = ??
-{% endhighlight %} 
+```
 
 Also who that for any positive integer `n` the following hold:
 
-{% highlight fsharp %}
+```fsharp
 (toNat >> fromNat) n = n
-{% endhighlight %}
+```
 
 and
 
-{% highlight fsharp %}
+```fsharp
 (fromNat >> toNat) = id
-{% endhighlight %}
+```
 
 #### Boolean expression
 Extend the definition of boolean expression to also include variables
 with a name. Modify the eval function to accept an extra argument for
 looking up the value of a variable:
 
-{% highlight fsharp %}
+```fsharp
 let eval (env: String -> bool) (exp: Exp) : bool = ??
 
-{% endhighlight %}
+```
 # <a name="module2"></a> The Functor Pattern
 In category theory a *functor* is a mapping between two categories.  They also
 arise naturally in programming as parameterized types (often containers) such
-as lists, options and trees. 
+as lists, options and trees.
 
 They powerful framework for deciding when it's safe to refactor code and are
 also the foundation for more complex patterns such as *applicative functors*
@@ -487,31 +487,31 @@ when designing a library for image manipulation.
 
 #### Aggregating elements
 
-{% highlight fsharp %}
+```fsharp
 let rec concatenate (xs: list<string>) : string =
     match xs with
     | []        -> ""
     | x :: xs   -> x  +  concatenate xs
-{% endhighlight %}
+```
 
 #### Aggregating elements
 
 
-{% highlight fsharp %}
+```fsharp
 
 let rec allLengthThree (ss: list<string>) : bool = ??
 
-{% endhighlight %}
+```
 
 
-{% highlight fsharp %}
+```fsharp
 let rec allLengthThree (ss: list<string>) : bool =
     match ss with
     | []        -> true
     | s :: ss   -> s.Length = 3 && allLengthThree ss
-{% endhighlight %}
+```
 
-{% highlight fsharp %}
+```fsharp
 
 let rec foldRight (f: 'T -> 'S -> 'S) (z: 'S) (xs: list<'T>) : 'S =
     match xs with
@@ -524,9 +524,9 @@ let concatenate = foldRight (+) ""
 
 let rec allLengthThree (ss: list<string>) : bool = ??
 
-{% endhighlight %}
+```
 
-{% highlight fsharp %}
+```fsharp
 
 let sum = foldRight (+) 0
 
@@ -538,20 +538,20 @@ foldRight (+) 0 [1;2;3]                     =
 1 + (2 + (3 + foldRight (+) 0 [])           =
 1 + (2 + ( 3 + 0))
 
-{% endhighlight %}
+```
 
 #### Mapping elements
 
-{% highlight fsharp %}
+```fsharp
 
 let rec allNames (ps : list<Person>) : list<string> =
     match ps with
     | []        -> []
     | p :: ps   -> p.Name :: allNames ps
-{% endhighlight %}
+```
 
 
-{% highlight fsharp %}
+```fsharp
 
 let rec squareAll (xs : list<int>) : list<int> =
     match xs with
@@ -561,12 +561,12 @@ let rec squareAll (xs : list<int>) : list<int> =
 let rec allLengths (ss: list<string>) : list<int> =
     match ss with
     | []        -> []
-    | s :: ss   -> s.Length :: allLengths ss    
+    | s :: ss   -> s.Length :: allLengths ss
 
-{% endhighlight %}
+```
 
 
-{% highlight fsharp %}
+```fsharp
 
 let rec map (f: 'T -> 'S) (xs : list<'T>) : list<'S> =
     match xs with
@@ -579,9 +579,9 @@ let squareAll = map (fun x -> x * x)
 
 let allLengths = map (fun s -> s.Length)
 
-{% endhighlight %}
+```
 
-{% highlight fsharp %}
+```fsharp
 
 let rec map (f: 'T -> 'S) (xs : list<'T>) : list<'S> =
     match xs with
@@ -595,53 +595,53 @@ length s1 :: (length s2 :: (length s3 :: (map lenght [])) =
 length s1 :: (length s2 :: (length s3 :: []))             =
 [length s1; length s2; length s3]
 
-{% endhighlight %}
+```
 
-{% highlight fsharp %}
+```fsharp
 
-let rec map (f: 'T -> 'S) (xs : list<'T>) : list<'S> = 
+let rec map (f: 'T -> 'S) (xs : list<'T>) : list<'S> =
     foldRight (fun x xs -> f x :: xs) [] xs
-{% endhighlight %}
+```
 
 #### Filtering elements
 
-{% highlight fsharp %}
-let allExceptGabor : list<Person> -> list<Person> = 
+```fsharp
+let allExceptGabor : list<Person> -> list<Person> =
     filter (fun p -> p.Name <> "Gabor")
-{% endhighlight %}
+```
 
 
-{% highlight fsharp %}
+```fsharp
 
-let filter (pred: 'T -> bool) (xs: list<'T>) : list<'T> = 
+let filter (pred: 'T -> bool) (xs: list<'T>) : list<'T> =
     foldRight (fun x xs -> if pred x then x :: xs else xs) [] xs
-{% endhighlight %}
+```
 
 
-{% highlight fsharp %}
+```fsharp
 let allChars = flatMap (List.ofSeq) ["abc"; "def"]
 
 allChars ["abc"; "de" ; "f"] = ['a'; 'b'; 'c'; 'd'; 'e'; 'f']
-{% endhighlight %}
+```
 
 ####  Collecting elements
 
-{% highlight fsharp %}
+```fsharp
 let flatMap f xs = foldRight (fun x xs -> f x @ xs) [] xs
-{% endhighlight %}
+```
 
 #### Composing functions over lists
 
-{% highlight fsharp %}
+```fsharp
 
-type Person = 
-    { 
+type Person =
+    {
         Name : string
         Email : string
-        Age : int 
+        Age : int
     }
 
-let persons = 
+let persons =
     [
         {Name = "Gabor"; Email = "gabor@foobar.com"; Age = 59}
         {Name = "Sally"; Email = "sally@foobar.com"; Age = 25}
@@ -653,31 +653,31 @@ let sumOfAllAgesOfPersonsNotNamedGabor =
     >> List.map (fun p -> p.Age)
     >> List.fold (+) 0
 
-{% endhighlight %}
+```
 
 #### Mapping over option types
 
-{% highlight fsharp %}
+```fsharp
 
 // Parameterized
 type Option<'T> =
     | Some of 'T
     | None
-{% endhighlight %}
+```
 
-{% highlight fsharp %}
+```fsharp
 let trimOptionString (os: option<string>) =
   match os with
   | Some s  -> Some (s.Trim())
   | None    -> None
-{% endhighlight %}
+```
 
-{% highlight fsharp %}
+```fsharp
 let lengthOptionString (os: option<string>) =
   match os with
   | Some s    -> Some (length s)
   | None      -> None
-{% endhighlight %}
+```
 
 
 ### Functors
@@ -692,7 +692,7 @@ let lengthOptionString (os: option<string>) =
 ![Category](img/functors.png)
 ![Category](img/nat-trans.png)
 
-{% highlight fsharp %}
+```fsharp
 
 (map f >> map g) None     =
 // Definition of (>>)
@@ -700,33 +700,33 @@ map g (map f None)        =
 // Definition of map
 map g None                =
 // Defintion of map
-None 
+None
 
 map (f >> g) None         =
 // Definition of map
 None
 
-{% endhighlight %}
+```
 
 
-{% highlight fsharp %}
+```fsharp
 
 (map f >> map g) (Some x) =
 // Definition of (>>)
 map g (map f (Some x))    =
-// Definition of map 
+// Definition of map
 map g (Some (f x))        =
 // Definition of map
 Some (g (f x))
 
 map (f >> g) (Some x)     =
 // Definition of map
-Some ((f >> g) x) 
-// Definition of (>>)     
-Some (g (f x))            = 
+Some ((f >> g) x)
+// Definition of (>>)
+Some (g (f x))            =
 
 
-{% endhighlight %}
+```
 
 #### List as a functor
 
@@ -738,36 +738,36 @@ Some (g (f x))            =
 
 How to represent *bitmap-like* images?
 
-{% highlight fsharp %}
+```fsharp
 let image = fromURL url
-{% endhighlight %}
+```
 
 ![Category](img/image.png)
 
 
-{% highlight fsharp %}
+```fsharp
 let image = fromURL url |> transpose
-{% endhighlight %}
+```
 
 ![Category](img/image-transpose.png)
 
-{% highlight fsharp %}
-let image = 
+```fsharp
+let image =
   fromURL url
   |> moveX 50
   |> moveY -20
-{% endhighlight %}
+```
 
 ![Category](img/image-move.png)
 
-{% highlight fsharp %}
+```fsharp
 let image = fromURL url |> flipVertical
-{% endhighlight %}
+```
 
 
-{% highlight fsharp %}
+```fsharp
 /// Representing an image.
-type Image<'T> = 
+type Image<'T> =
     {
         Width : int
         Height : int
@@ -778,20 +778,20 @@ type Image<'T> =
 let setHeight h img = {img with Height = h}
 
 /// Transforms the width of an image.
-let setWidth w img = {img with Width = w} 
+let setWidth w img = {img with Width = w}
 
 /// Transforms the pixels of an image.
 let setGetPixel p img = {img with GetPixel = p}
 
-{% endhighlight %}
- 
-{% highlight fsharp %}
+```
+
+```fsharp
 let image = fromURL url |> transpose
-{% endhighlight %}
+```
 ![Category](img/image-transpose.png)
 
 
-{% highlight fsharp %}
+```fsharp
 /// Transposes an image by turning each column into a row.
 let transpose img =
     img
@@ -801,31 +801,31 @@ let transpose img =
 
 /// Flip horizontal
 let flipHorizontal img =
-    img |> setGetPixel (fun x y -> img.GetPixel (img.Width - x) y 
+    img |> setGetPixel (fun x y -> img.GetPixel (img.Width - x) y
 
-{% endhighlight %}
+```
 
 
-{% highlight fsharp %}
+```fsharp
 
     /// Flips an image vertically.
-    let flipVertical<'T> : Image<'T> -> Image<'T> = 
+    let flipVertical<'T> : Image<'T> -> Image<'T> =
         transpose >> flipHorizontal >> transpose
 
     /// Shifts an image horizontally.
     let moveX l img =
         img |> setGetPixel (fun x y -> img.GetPixel (x - l) y)
-        
+
     /// Shifts an image vertically.
     let moveY l = transpose >> moveX l >> transpose
 
     let crop x y w h =
         moveX (-x) >> moveY (-y) >> setWidth w >> setHeight h
-    {% endhighlight %}
+    ```
 
 #### Image as a Functor
 
-{% highlight fsharp %}
+```fsharp
 /// Maps each pixel of an image.
 let map (f: 'T -> 'U) (img: Image<'T>) : Image<'U> =
     {
@@ -833,25 +833,25 @@ let map (f: 'T -> 'U) (img: Image<'T>) : Image<'U> =
         Height = img.Height
         GetPixel = fun x y -> Option.map f (img.GetPixel x y)
     }
-{% endhighlight %}
-  
+```
 
-{% highlight fsharp %}
-let image = 
+
+```fsharp
+let image =
     B.fromURL (url)
     |> map C.toBlackWhite
     |> map not
     |> map C.fromBlackWhite
 
-{% endhighlight %}
+```
 ![Category](img/image-invert.png)
 
 
-{% highlight fsharp %}
-let image = 
+```fsharp
+let image =
     B.fromURL (url)
     |> map (C.toBlackWhite >> not >> C.fromBlackWhite)
-{% endhighlight %}
+```
 
 #### Summary
 
@@ -877,63 +877,63 @@ A monoid in F# for type T is defined by:
 
 So that the following constraints hold:
 
-* `x <+> z = x` 
+* `x <+> z = x`
 * `z <+> x = x`
 * `x <+> (y <+> v) = (x <+> y) <+> v`
 
 For instance the natural numbers form two monoids. One for addition:
 
-{% highlight fsharp %}
+```fsharp
 z = 0
 add = (+)
-{% endhighlight %}
+```
 
 And another one for multiplication:
 
-{% highlight fsharp %}
+```fsharp
 z = 1
 add = (*)
-{% endhighlight %}
+```
 
 #### The List Monoid
 One of the most commonly used monoids are lists:
-{% highlight fsharp %}
+```fsharp
 z = []
 add = (@)
-{% endhighlight %}
+```
 
 To prove that the monoids law for identity and associativity hold we need to
 check the definition for list concatenation:
 
-{% highlight fsharp %}
-let rec (@) xs ys = 
+```fsharp
+let rec (@) xs ys =
     match xs, ys with
     | [] , _        -> ys
     | _, []         -> xs
     | x :: xs, _    -> x :: (xs @ ys) k
-{% endhighlight %}
+```
 
 Which can be written more succinctly with a `foldRight`:
 
-{% highlight fsharp %}
-let (@) (xs: list<'T>) (ys: list<'T>) = 
+```fsharp
+let (@) (xs: list<'T>) (ys: list<'T>) =
   foldRight (fun x xs -> x :: xs)  xs ys
-{% endhighlight %}
+```
 
 First identity:
-{% highlight fsharp %}
+```fsharp
 // By definition of @
 [] @ xs = xs
 // By definition of @
 xs @ [] = xs
-{% endhighlight %}
+```
 
-{% highlight fsharp %}
+```fsharp
 
 // Empty case
-[] @ (ys @ zs)                  = 
+[] @ (ys @ zs)                  =
 // Def of @
-ys @ zs                         = 
+ys @ zs                         =
 // Use identity prop
 (ys @ []) @ zs
 
@@ -944,7 +944,7 @@ x :: (xs @ (ys @ zs))
 (x :: xs @ ys) @ (zs)           =
 // Defintion of @
 x :: ((xs @ ys) @ zs)
-{% endhighlight %}
+```
 
 
 #### Monoids for images
@@ -955,60 +955,60 @@ images next to each other.
 In order to achieve compositionality via monoids we need to define an empty
 `Image`:
 
-{% highlight fsharp %}
+```fsharp
 /// Empty image.
 let empty = { Width = 0; Height = 0; GetPixel = fun _ _ -> None }
-{% endhighlight %}
+```
 
-{% highlight fsharp %}
+```fsharp
 /// Horizontal composition.
 let next (img1: Image<'T>) (img2: Image<'T>) : Image<'T> =
     {
-        Width = img1.Width + img2.Width 
+        Width = img1.Width + img2.Width
         Height = max img1.Height img2.Height
         GetPixel = fun x y ->
-            if x < img1.Width then 
-                img1.GetPixel x y 
-            else 
+            if x < img1.Width then
+                img1.GetPixel x y
+            else
                 img2.GetPixel (x - img1.Width) y
     }
-{% endhighlight %}
+```
 
 There is also a corresponding operation for composing images vertically:
-{% highlight fsharp %}
+```fsharp
 
 /// Vertical composition.
 let above (img1: Image<'T>) (img2: Image<'T>) : Image<'T> =
     transpose <| next (transpose img1) (transpose img2)
 
-{% endhighlight %}
+```
 
 #### Operations for free
 By defining monoid operators for composing two elements we automatically get a
 function for composing a sequence horizontally:
 
-{% highlight fsharp %}
+```fsharp
 /// Horizontal composition
 let horizontal : seq<Image> : Image = Seq.fold next empty
-{% endhighlight %}
+```
 
 And another one for vertical composition:
 
-{% highlight fsharp %}
+```fsharp
 /// Vertical composition
 let vertical : seq<Image> : Image = Seq.fold above empty
-{% endhighlight %}
+```
 
 Here are some examples of how to use the operators:
 
-{% highlight fsharp %}
-let baseImg = 
+```fsharp
+let baseImg =
     B.fromURL url |> crop 30 10 200 240
 
-let blackWhiteImg = 
+let blackWhiteImg =
     map (C.toBlackWhite >> C.invert >> C.fromBlackWhite) baseImg
 
-let wideImg = 
+let wideImg =
     horizontal [baseImg; blackWhiteImg]
 
 let composedImg =
@@ -1016,12 +1016,12 @@ let composedImg =
         wideImg
         flipVertical wideImg
     ]
-{% endhighlight %}
+```
 
 ![Category](img/image-composed.png)
 
 
-  
+
 
 
 
