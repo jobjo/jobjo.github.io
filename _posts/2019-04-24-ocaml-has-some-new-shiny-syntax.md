@@ -32,7 +32,7 @@ The examples below are about composing functions returning
 optional results using the monad and applicative functor combinators for
 options.
 
-To get something concrete to work with, assume the following API:
+To have something concrete to work with, assume the following API:
 
 ```ocaml
 val safe_head : 'a seq -> 'a option
