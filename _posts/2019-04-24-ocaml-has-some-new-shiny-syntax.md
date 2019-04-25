@@ -26,6 +26,9 @@ follow along you need to update your opam and switch to the beta release:
 opam switch ocaml-variants.4.08.0+beta1
 ```
 
+Alternatively, you can also use the latest version of `dune` for building, which
+[has a backport of the syntax extension](https://discuss.ocaml.org/t/let-syntax-backported-to-ocaml-4-02/3447).
+
 ## An example - working with options
 
 The examples below are about composing functions returning
@@ -106,7 +109,7 @@ let* x = e1 in e2 x
 desugars to the equivalent of:
 
 ```ocaml
-eq >>= fun x -> e2 x
+e1 >>= fun x -> e2 x
 ```
 
 ### Applicative syntax for options
