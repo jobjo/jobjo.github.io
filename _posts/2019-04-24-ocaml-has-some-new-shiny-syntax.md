@@ -239,7 +239,7 @@ dependencies (just like with regular) `let .. and` syntax).
 In general, an expression, `let+ x = e1 and+ y = e2 in e3 x y`, gets desugared to:
 
 ```ocaml
-map (fun (x,y) -> e3) (product e1 e2)
+map (fun (x,y) -> e3 x y) (product e1 e2)
 ```
 
 Or the equivalent expression, written in terms of `apply` and `pure`:
