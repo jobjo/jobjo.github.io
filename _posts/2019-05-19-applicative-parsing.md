@@ -125,7 +125,7 @@ end
 ```
 
 In addition to these, we'll include an `Ops` module with infix versions
-and some derived combinator:
+and some derived combinators:
 
 ```ocaml
 module Ops = struct
@@ -159,7 +159,7 @@ val list_of_string : string -> char list
 ```
 
 Their implementation, along with the complete code is available
-[here]().
+[here](https://gist.github.com/jobjo/13376aaea1151100dd7915dedb35d9d7).
 
 ### Building simple parsers
 
