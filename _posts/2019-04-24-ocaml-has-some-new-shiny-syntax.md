@@ -198,7 +198,7 @@ let ( <*> ) fa xa = map (fun (f, x) -> f x) @@ product fa xa
 Going the other way around, one can also express `product` using `pure` and `apply`:
 
 ```ocaml
-let product xa ya = pure (fun x y -> (x, y) <*> xa <*> ya
+let product xa ya = pure (fun x y -> (x, y)) <*> xa <*> ya
 ```
 
 The implementations of `map` and `product` for the `option` type are straight forward:
