@@ -183,7 +183,7 @@ let string s =
     (* Combine 'x' and 'xs' in a string *)
     Printf.sprintf "%c%s" x xs
   in
-  List.fold_right accum (string_to_list s) (return "")
+  List.fold_right accum (list_of_string s) (return "")
 ```
 
 Next, let's attempt a parser for parsing digits. A version that
