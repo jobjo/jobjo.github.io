@@ -562,7 +562,7 @@ keywords (these were both new to me).
 
 Tamas K. further added on to diversity by submitting the these lines of *R*:
 
-```highlight r
+```r
 require(rlist)
 
 start <- c("R","R","R","E","L","L","L")
