@@ -29,12 +29,14 @@ out what things are executed and why. Consider this example:
 ```ocaml
 open Lwt.Syntax
 
+(* val program1 : int Lwt.t *)
 let program1 =
   let* () = Lwt_io.printl "Kicking off 1" in
   let* () = Lwt_io.printl "Running 1" in
   let* () = Lwt_unix.sleep 1. in
   Lwt.return 1
 
+(* val program2 : int Lwt.t *)
 let program2 =
   let* () = Lwt_io.printl "Kicking off 2" in
   let* () = Lwt_unix.sleep 1. in
@@ -54,7 +56,14 @@ Running 1
 Kicking off 2
 ```
 
-What if we *run* `program1`?
+What if we *run* `program1`? There is a function `Lwt_main.run` that given
+an Lwt value returns a value:
+
+```ocaml
+val run : 'a Lwt.t -> 'a
+```
+
+Ignoring the return value, we can use it like so:
 
 ```ocaml
 let _ = Lwt_main.run program1
@@ -82,18 +91,21 @@ should be performed concurrently. For some programs written in Lwt, this is not
 always obvious. First, looking at the following snippet:
 
 ```ocaml
+(* val call_robert : unit -> string Lwt.t *)
 let call_robert () =
   let* () = Lwt_io.printl "Calling Robert" in
   let* () = Lwt_unix.sleep 1. in
   let* () = Lwt_io.printl "Robert picked up." in
   Lwt.return "Hello"
 
+(* val call_maria : unit -> string Lwt.t *)
 let call_maria () =
   let* () = Lwt_io.printl "Calling Maria" in
   let* () = Lwt_unix.sleep 3. in
   let* () = Lwt_io.printl "Maria picked up" in
   Lwt.return "Hola"
 
+(* val program : unit Lwt.t *)
 let program =
   let* _ = call_robert () in
   let* _ = call_maria ()  in
@@ -115,10 +127,13 @@ Maria picked up
 What happens if we instead rewrite the program to the version below?
 
 ```ocaml
+(* val robert : string Lwt.t *)
 let robert = call_robert ()
 
+(* val maria : string Lwt.t *)
 let maria = call_maria ()
 
+(* val program : unit Lwt.t *)
 let program =
   let* _  = robert in
   let* _ = maria in
@@ -147,6 +162,7 @@ sub-expressions and giving them names. Let's look at another concrete
 example:
 
 ```ocaml
+(* val increment_count : unit -> int Lwt.t *)
 let increment_count =
   let n = ref 0 in
   fun () ->
@@ -154,6 +170,7 @@ let increment_count =
     let* () = Lwt_unix.sleep 1. in
     Lwt.return (!n)
 
+(* val program : unit -> unit Lwt.t *)
 let program () =
   let* c1 = increment_count () in
   let* () = Lwt_io.printf "Count is %d\n" c1 in
@@ -178,6 +195,7 @@ functional programming we're used to relying on referential transparency, it
 is tempting to refactor the code, as in:
 
 ```ocaml
+(* val program : unit -> unit Lwt.t *)
 let program () =
   let incr = increment_count () in
   let* c1 = incr in
@@ -240,7 +258,7 @@ or may not contain a value, and if not, may eventually be filled with a value
 or an exception.
 
 An *action*, on the other hand, would represent a *computation* that when run may
-produces a value. Promises are inherently imperative while actions are
+produce a value. Promises are inherently imperative while actions are
 functional (referentially transparent).
 
 As a simple starting point, we could define an (an abstract) action type as:
@@ -254,10 +272,14 @@ stronger guarantees that code that looks like its executed sequentially,
 really is. In our example from above:
 
 ```ocaml
+
+(* val robert : string t *)
 let robert = call_robert ()
 
+(* val maria : string t *)
 let maria = call_maria ()
 
+(* val program : unit t *)
 let program =
   let* _  = robert in
   let* _ = maria in
@@ -277,6 +299,7 @@ To express parallel operations we can simply define the `let* .. and*` syntax
 similar to what exists in Lwt, and use it as in:
 
 ```ocaml
+(* val program : unit t *)
 let program =
   let* _ = robert
   and* _ = maria in
@@ -289,6 +312,7 @@ parallel operations to be declared explicitly!
 Thanks to referential transparency, we'd also recover the missing *count*:
 
 ```ocaml
+(* val program : unit t *)
 let program =
   let incr = increment_count () in
   let* c1 = incr in
