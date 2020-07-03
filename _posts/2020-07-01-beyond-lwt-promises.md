@@ -286,7 +286,7 @@ let program =
 Or, we could expose some parallel combinator. The point is that we now require the
 parallel operations to be declared explicitly!
 
-Thanks to referential transparency, we'd also recover our missing *count*:
+Thanks to referential transparency, we'd also recover the missing *count*:
 
 ```ocaml
 let program =
@@ -323,7 +323,7 @@ Finally, if we feel like it, we could generalize the type further and also intro
 Something along the lines of:
 
 ```ocaml
-type ('r, 'a , 'e) t = 'r > ('a, 'e) result Lwt.t
+type ('r, 'a , 'e) t = 'r -> ('a, 'e) result Lwt.t
 ```
 
 This would land us closer to the design of the [ZIO](https://zio.dev/) library in Scala.
