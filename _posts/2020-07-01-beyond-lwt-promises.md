@@ -248,7 +248,7 @@ and composable.
 
 If you agree with my reasoning above and think it's worth considering
 a different semantics, it does not necessarily require throwing out the
-baby out with the bathwater. We may still be able to rely on the Lwt
+baby with the bathwater. We may still be able to rely on the Lwt
 machinery for scheduling and maintaining compatibility with existing Lwt
 based libraries. What I propose is introducing an abstraction based on
 unevaluated *actions* rather then promises.
