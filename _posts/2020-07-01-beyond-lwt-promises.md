@@ -166,8 +166,8 @@ example:
 let increment_count =
   let n = ref 0 in
   fun () ->
-    incr n;
     let* () = Lwt_unix.sleep 1. in
+    incr n;
     Lwt.return (!n)
 
 (* val program : unit -> unit Lwt.t *)
@@ -190,7 +190,7 @@ Count 1
 Count 2
 ```
 
-Since there are two identical calls to `increment_counter`, and because in
+Since there are two identical calls to `increment_count`, and because in
 functional programming we're used to relying on referential transparency, it
 is tempting to refactor the code, as in:
 
