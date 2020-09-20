@@ -3,16 +3,16 @@ layout: post
 title: Type-safe and composable dependencies
 ---
 
-Applications that need to communicate with the outside world often end up
+Applications that need to communicate with the outside world inadvertently end up
 accumulating a range of dependencies – things like database
 connection-strings, logging facilities, or configuration options.
 
-Running an application in a specific settings means instantiating a unique
-set of those facilities. For testing purposes, we may want to
-provide mock implementations of some functionality in order to achieve
+Running an application in a specific setting means instantiating a particular
+set of configurations. For example, for testing purposes, we may want
+to provide mock implementations of some functionality in order to achieve
 deterministic results.
 
-What’s a good strategy for factoring out such dependencies? In this post I’ll
+What’s a good strategy for factoring out such dependencies in OCaml? In this post I’ll
 propose an approach that is:
 
 - Type-safe
@@ -33,7 +33,7 @@ which outlines a few more concrete options.
 
 My proposed API is similar in sprit to effect systems but more limited in
 scope and may be implemented in vanilla OCaml, rather than the upcoming
-multicore/effects version.
+multi-core/effects version.
 
 This strategy, however, does resort to using monads for providing the glue
 code that pieces together different parts of resource-dependent computations.
@@ -47,7 +47,7 @@ so it's worth taking a look at why exactly the standard version doesn't cut it.
 
 ## Limitations of the reader-monad
 
-A simple reader monad is just a function from some input type to some output
+A simple reader-monad is just a function from some input type to some output
 type, and may be defined as:
 
 ```ocaml
@@ -95,7 +95,7 @@ let run e m = m e
 
 Let's look at a schoolbook example of how to use it. Say that some components
 of our application depends on a *user-id* value in the form of an integer. So
-the `'r` part of the reader monad in this example is `int`, and we can provide
+the `'r` part of the reader-monad in this example is `int`, and we can provide
 access to the user-id via a function:
 
 ```ocaml
@@ -176,7 +176,7 @@ The encoding I suggest makes use of polymorphic variants and is inspired by
 their applications for error handling, as described in [this
 article](https://keleshev.com/composable-error-handling-in-ocaml).
 
-Just like the vanilla reader monad, a type `('a, 'r) t` is introduced and
+Just like the vanilla reader-monad, a type `('a, 'r) t` is introduced and
 represents a computation that depends on an
 *environment* value of type `'r` and produces a value of type `'a`. The tweak
 is to make the computation not directly dependent on `r` but on a
@@ -284,7 +284,7 @@ The signature of `provide` takes a function for mapping a resource context to
 a value. Note that the only way of constructing a value is to use the
 embedded *int* sub-context and the `Context.value` function.
 
-So far we've basically replicated the reader monad. But importantly, we've
+So far we've basically replicated the reader-monad. But importantly, we've
 solved the problem of freely mixing resources. Here's the `get_log_mode`
 example:
 
@@ -339,6 +339,14 @@ let store_item item =
   log ("Saved item " ^ item)
 ```
 
+Looking at the inferred signature of `store_item`, it's a function that given
+a `string` value, returns a computation that produces a `unit` and requires
+three resources:
+
+- A connection-string of type `string`
+- A log-mode of type `log_mode`
+- A user-id or type `int`
+
 Say our top-level program now calls `store_item`:
 
 ```ocaml
@@ -353,13 +361,13 @@ In order to run it, we have to supply all three dependencies, as in:
 let run =
   program
   |> provide (function
-       | `Connection_string ctx -> Context.value "abc123" ctx
-       | `User_id ctx -> Context.value 123 ctx
-       | `Log_mode ctx -> Context.value Local ctx)
+      | `Connection_string ctx -> Context.value "abc123" ctx
+      | `User_id ctx -> Context.value 123 ctx
+      | `Log_mode ctx -> Context.value Local ctx)
   |> run
  ```
 
- ## Modules as dependencies
+## Modules as dependencies
 
 Nothing prevents us from extending resources to also include (first-class)
 modules. Consider a simple example for factoring out a logging module
@@ -394,7 +402,7 @@ let _ =
       program
 ```
 
-## Solving the *three-module-problem*
+## Solving the *three-module problem*
 
 Many times a particular resource, such as a logging module, is used in
 multiple places -- also by modules that are themselves exposed as resources.
@@ -571,7 +579,7 @@ let test_program : (unit, void) t=
     | `Database ctx -> Context.value (module MockDatabase: Database) ctx)
 ```
 
-## A note on the implementation
+## Implementation
 
 Extending the reader-monad to implement the proposed API above is
 straight-forward for the most part. The challenging bit is the
