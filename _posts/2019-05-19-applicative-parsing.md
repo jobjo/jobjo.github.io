@@ -865,7 +865,7 @@ It serves to exemplify a more general pattern -- related to [initial
 algebras](https://en.wikipedia.org/wiki/Initial_algebra) -- where the approach
 is to identify a data type, for a particular domain, while making as few
 commitments as possible. Whenever we define a value in the algebra -- in
-our case, the parser algebra -- we don't loose any information that went into
+our case, the parser algebra -- we don't lose any information that went into
 constructing it. We can thus map it to other more refined representations.
 For parsers, this meant providing multiple backends in the form of
 *evaluator* and *printer* functions.
